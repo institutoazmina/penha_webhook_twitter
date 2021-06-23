@@ -88,6 +88,8 @@ router.post('/twitter-webhook', (req, res) => {
                                 }
                             }
 
+                        }).catch(err => {
+                            console.log(err);
                         })
                     }
                     else {
@@ -102,6 +104,8 @@ router.post('/twitter-webhook', (req, res) => {
                                 }
                             }
 
+                        }).catch(err => {
+                            console.log(err);
                         })
 
                     }
