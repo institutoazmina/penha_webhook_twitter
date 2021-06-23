@@ -83,11 +83,11 @@ router.post('/twitter-webhook', (req, res) => {
                                             type: 'options',
                                             options: [
                                                 {
-                                                    label: "quero saber mais sobre relacionamento abusivo",
+                                                    label: "quero saber mais sobre relacionament",
                                                     metadata: "p2a"
                                                 },
                                                 {
-                                                    label: "estou num relacionamento abusivo e quero ajuda",
+                                                    label: "estou num relacionamento abusivo e q",
                                                     metadata: "p2b"
                                                 }
                                             ]
