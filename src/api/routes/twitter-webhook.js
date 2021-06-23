@@ -79,19 +79,12 @@ router.post('/twitter-webhook', (req, res) => {
 
                                 message_data: {
                                     text: messages.join('\n'),
+                                    quick_reply: {
+                                        type: 'options',
+                                        options: [node.quick_replies]
+                                    }
                                 },
 
-                                quick_reply: {
-                                    type: 'options',
-                                    options: [{
-                                        "label": "foo",
-                                        "metadata": "node_2"
-                                    },
-                                    {
-                                        "label": "bar",
-                                        "metadata": "node_3"
-                                    }]
-                                }
                             }
                         }
 
