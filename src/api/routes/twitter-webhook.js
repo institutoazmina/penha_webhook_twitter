@@ -16,7 +16,7 @@ router.get('/twitter-webhook', (req, res) => {
 
     const consumer_secret = process.env.TWITTER_CONSUMER_SECRET;
 
-    return res.json({ response_token: get_challenge_response(crc_token, consumer_secret) });
+    return res.json({ response_token: 'sha256=' + get_challenge_response(crc_token, consumer_secret) });
 });
 
 router.post('/twitter-webhook', (req, res) => {
