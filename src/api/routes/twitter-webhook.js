@@ -67,8 +67,7 @@ router.post('/twitter-webhook', (req, res) => {
 
                 // Verificando por mensagens
                 const messages = node.messages;
-                messages.forEach(function (msg, idx, array) {
-
+                if (messages) {
 
                     client.post("direct_messages/events/new", {
                         event: {
@@ -79,7 +78,7 @@ router.post('/twitter-webhook', (req, res) => {
                                 target: { recipient_id: twitter_user_id },
 
                                 message_data: {
-                                    text: msg,
+                                    text: message.join('\n'),
                                 },
 
                                 quick_reply: {
@@ -92,8 +91,7 @@ router.post('/twitter-webhook', (req, res) => {
                     }).catch(err => {
                         console.log(err);
                     })
-
-                });
+                }
 
 
             }
