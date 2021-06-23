@@ -1,7 +1,8 @@
-const app = require("./app");
+require('dotenv').config()
 
-const port = process.env.PORT;
+const api = require("./api/index");
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
+api.listen(process.env.PORT, () => {
+
+  console.log(`AzMina-chatbot app listening at http://localhost:${process.env.PORT}`)
 });
