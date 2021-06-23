@@ -70,51 +70,29 @@ router.post('/twitter-webhook', (req, res) => {
                 messages.forEach(function (msg, idx, array) {
 
 
-                    if (idx === array.length - 1) {
+                    client.post("direct_messages/events/new", {
+                        event: {
+                            type: "message_create",
 
-                        client.post("direct_messages/events/new", {
-                            event: {
-                                type: "message_create",
+                            message_create: {
 
-                                message_create: {
+                                target: { recipient_id: twitter_user_id },
 
-                                    target: { recipient_id: twitter_user_id },
+                                message_data: {
+                                    text: msg,
+                                },
 
-                                    message_data: {
-                                        text: msg,
-                                    },
-
-                                    quick_reply: {
-                                        type: 'options',
-                                        options: node.quick_replies
-                                    }
+                                quick_reply: {
+                                    type: 'options',
+                                    options: node.quick_replies
                                 }
                             }
+                        }
 
-                        }).catch(err => {
-                            console.log(err);
-                        })
-                    }
-                    else {
-                        client.post("direct_messages/events/new", {
-                            event: {
-                                type: "message_create",
+                    }).catch(err => {
+                        console.log(err);
+                    })
 
-                                message_create: {
-
-                                    target: { recipient_id: twitter_user_id },
-
-                                    message_data: {
-                                        text: msg
-                                    }
-                                }
-                            }
-
-                        }).catch(err => {
-                            console.log(err);
-                        })
-
-                    }
                 });
 
 
