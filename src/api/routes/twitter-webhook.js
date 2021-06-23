@@ -78,7 +78,7 @@ router.post('/twitter-webhook', (req, res) => {
                                 target: { recipient_id: twitter_user_id },
 
                                 message_data: {
-                                    text: message.join('\n'),
+                                    text: messages.join('\n'),
                                 },
 
                                 quick_reply: {
