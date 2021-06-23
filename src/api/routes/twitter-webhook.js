@@ -41,7 +41,7 @@ router.post('/twitter-webhook', (req, res) => {
         const twitter_user_id = dm.message_create.sender_id;
         const remote_id = crypto.createHmac('sha256', twitter_user_id).digest('hex');
 
-
+        console.log('twitter_user_id :' + twitter_user_id)
         const foo = redis_client.get(twitter_user_id, (err, reply) => {
             console.log("err: " + err);
             console.log("reply: " + reply);
