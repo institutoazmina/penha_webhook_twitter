@@ -68,6 +68,40 @@ router.post('/twitter-webhook', (req, res) => {
                     });
                     next_node = next_node[0];
 
+                    if (next_node.questionnaire_id) {
+                        client.post("direct_messages/events/new", {
+                            event: {
+                                type: "message_create",
+
+                                message_create: {
+
+                                    target: { recipient_id: twitter_user_id },
+
+                                    message_data: {
+                                        text: "por que você chegou aqui",
+                                        quick_reply: {
+                                            type: 'options',
+                                            options: [
+                                                {
+                                                    label: "quero saber mais sobre relacionamento abusivo",
+                                                    metadata: "p2a"
+                                                },
+                                                {
+                                                    label: "estou num relacionamento abusivo e quero ajuda",
+                                                    metadata: "p2b"
+                                                }
+                                            ]
+                                        }
+                                    },
+
+                                }
+                            }
+
+                        }).catch(err => {
+                            console.log(err);
+                        })
+                    }
+
                     console.log(next_node);
                 }
             }
