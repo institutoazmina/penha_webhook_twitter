@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { createHmac } = require('crypto');
+const crypto = require('crypto');
 
 function get_challenge_response(crc_token, consumer_secret) {
-    return createHmac('sha256', consumer_secret).update(crc_token).digest('base64');
+    return crypto.createHmac('sha256', consumer_secret).update(crc_token).digest('base64');
 };
 
 router.get('/twitter-webhook', (req, res) => {
