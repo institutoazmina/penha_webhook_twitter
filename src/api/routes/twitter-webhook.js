@@ -39,6 +39,9 @@ router.post('/twitter-webhook', (req, res) => {
 
     direct_messages.forEach(dm => {
         console.log(dm);
+        console.log("================\n");
+        console.log(dm.message_create.message_data.quick_reply_response);
+
         const twitter_user_id = dm.message_create.sender_id;
         const remote_id = crypto.createHmac('sha256', twitter_user_id).digest('hex');
 
