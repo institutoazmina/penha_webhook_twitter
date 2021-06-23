@@ -76,15 +76,18 @@ router.post('/twitter-webhook', (req, res) => {
                             event: {
                                 type: "message_create",
 
-                                target: { recipient_id: twitter_user_id },
+                                message_create: {
 
-                                message_data: {
-                                    text: msg,
-                                },
+                                    target: { recipient_id: twitter_user_id },
 
-                                quick_reply: {
-                                    type: 'options',
-                                    options: node.quick_replies
+                                    message_data: {
+                                        text: msg,
+                                    },
+
+                                    quick_reply: {
+                                        type: 'options',
+                                        options: node.quick_replies
+                                    }
                                 }
                             }
 
@@ -97,10 +100,13 @@ router.post('/twitter-webhook', (req, res) => {
                             event: {
                                 type: "message_create",
 
-                                target: { recipient_id: twitter_user_id },
+                                message_create: {
 
-                                message_data: {
-                                    text: msg
+                                    target: { recipient_id: twitter_user_id },
+
+                                    message_data: {
+                                        text: msg
+                                    }
                                 }
                             }
 
