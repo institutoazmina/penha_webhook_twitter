@@ -59,6 +59,17 @@ router.post('/twitter-webhook', (req, res) => {
                     return n.code === stash.current_node;
                 });
                 node = node[0];
+
+                if (dm.message_create.message_data.quick_reply_response) {
+                    const quick_reply = dm.message_create.message_data.quick_reply_response.metadata;
+
+                    let next_node = flow.filter((n) => {
+                        return n.code === quick_reply;
+                    });
+                    next_node = next_node[0];
+
+                    console.log(next_node);
+                }
             }
             else {
                 // Começando coversa
