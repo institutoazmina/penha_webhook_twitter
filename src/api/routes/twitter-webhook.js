@@ -64,7 +64,7 @@ router.post('/twitter-webhook', (req, res) => {
                     started_at: Date.now()
                 }
                 redis_client.set(twitter_user_id, JSON.stringify(step));
-
+                console.log(node.quick_replies);
                 // Verificando por mensagens
                 const messages = node.messages;
                 if (messages) {
