@@ -1,0 +1,35 @@
+[
+    {
+        "code": "node_1",
+        "type": "text_message",
+        "input_type": "quick_reply",
+        "messages": [
+            "Olá, blablabla...",
+            "Escolha uma das opções: "
+        ],
+        "quick_replies": [
+            {
+                "label": "foo",
+                "metadata": "node_2"
+            },
+            {
+                "label": "bar",
+                "metadata": "node_3"
+            }
+        ],
+        "parent": null,
+        "children": [
+            "node_2",
+            "node_3"
+        ]
+    },
+    {
+        "code": "node_3",
+        "type": "questionnaire",
+        "questionnaire_id": "XXXXXXXXXXX",
+        "is_conversation_end": true,
+        "on_conversation_end": "restart",
+        "parent": "node_1",
+        "children": null
+    }
+]
