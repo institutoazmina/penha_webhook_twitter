@@ -114,7 +114,7 @@ router.post('/twitter-webhook', async (req, res) => {
             if (dm.message_create.message_data.quick_reply_response) {
                 const quick_reply = dm.message_create.message_data.quick_reply_response.metadata;
 
-                if (typeof quick_reply === 'string') {
+                if (quick_reply.substring(0, 4) === 'node') {
                     let next_node = flow.filter((n) => {
                         return n.code === quick_reply;
                     });
