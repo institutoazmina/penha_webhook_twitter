@@ -42,8 +42,14 @@ async function post_questionnaire(twitter_user_id, questionnaire_id) {
     });
 }
 
+async function post_answer(twitter_user_id, questionnaire_id) { }
+
 async function get_stash(twitter_user_id) {
     return await redis_client.getAsync(twitter_user_id);
+}
+
+async function save_stash(twitter_user_id, stash) {
+    return await redis_client.setAsync(twitter_user_id, JSON.stringify(stash));
 }
 
 async function send_dm(twitter_user_id, text, options) {
@@ -108,12 +114,7 @@ router.post('/twitter-webhook', async (req, res) => {
             if (dm.message_create.message_data.quick_reply_response) {
                 const quick_reply = dm.message_create.message_data.quick_reply_response.metadata;
 
-                if (quick_reply.substring(0, 13) === 'questionnaire') {
-                    console.log('QR foi uma resposta de questionario\n')
-                    const chosen_opt = quick_reply.substring(14);
-                    console.log('chosen_opt: ' + chosen_opt)
-                } else {
-
+                if (typeof quick_reply === 'string') {
                     let next_node = flow.filter((n) => {
                         return n.code === quick_reply;
                     });
@@ -128,14 +129,24 @@ router.post('/twitter-webhook', async (req, res) => {
                             const next_message = questionnaire_data.quiz_session.current_msgs[0];
 
                             await send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
-                                return { label: opt.display.substring(0, 36), metadata: 'questionnaire_' + opt.code_value }
+                                return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, is_questionnaire: true }) }
                             }));
 
                             stash.current_node = next_node.code;
                             stash.is_questionnaire = true;
                             stash.current_questionnaire_question = next_message.code
-                            redis_client.set(twitter_user_id, JSON.stringify(stash));
+                            console.log('nova stash: ');
+                            console.log(stash);
+                            await save_stash(twitter_user_id, stash);
                         }
+                    } else {
+                        console.log('QR foi uma resposta de questionario\n')
+                        const chosen_opt = quick_reply.substring(8);
+                        console.log('chosen_opt: ' + chosen_opt)
+
+                        const metadata = JSON.parse(quick_reply);
+                        console.log(metadata)
+
                         // axios({
                         //     method: 'post',
                         //     url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/new',
@@ -191,7 +202,8 @@ router.post('/twitter-webhook', async (req, res) => {
                 const text = messages.join('\n');
                 await send_dm(twitter_user_id, text, node.quick_replies);
             }
-            redis_client.set(twitter_user_id, JSON.stringify(step));
+
+            await save_stash(twitter_user_id, step);
         }
 
         //         console.log('twitter_user_id :' + twitter_user_id)
