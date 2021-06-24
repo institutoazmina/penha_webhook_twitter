@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const redis = require('redis');
 const Twitter = require('twitter-lite');
 const FormData = require('form-data');
 const axios = require('axios');
+
+const bluebird = require('bluebird');
+const redis = require('redis');
+bluebird.promisifyAll(redis.RedisClient.prototype);
+bluebird.promisifyAll(redis.Multi.prototype);
 
 const client = new Twitter({
     consumer_key: process.env.TWITTER_CONSUMER_KEY,
