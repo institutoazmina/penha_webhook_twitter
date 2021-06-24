@@ -171,9 +171,25 @@ router.post('/twitter-webhook', async (req, res) => {
                     if (answer.data.quiz_session.current_msgs[0]) {
                         const next_message = answer.data.quiz_session.current_msgs[0];
 
-                        await send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
-                            return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
-                        }));
+                        if (next_message.type === 'yesno') {
+                            await send_dm(twitter_user_id, next_message.content, [
+                                {
+                                    label: 'Sim',
+                                    metadata: JSON.stringify({ question_ref: next_message.ref, index: 'Y', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
+                                },
+                                {
+                                    label: 'Não',
+                                    metadata: JSON.stringify({ question_ref: next_message.ref, index: 'N', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
+                                }
+                            ]);
+                        } else if (next_message.type === 'onlychoice') {
+                            await send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
+                                return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
+                            }));
+                        } else {
+                            await send_dm(twitter_user_id, 'Fim do fluxo disponível, reiniciando');
+                            await delete_stash(twitter_user_id);
+                        }
 
                         stash.current_questionnaire_question = next_message.code;
                         await save_stash(twitter_user_id, stash);
@@ -211,35 +227,6 @@ router.post('/twitter-webhook', async (req, res) => {
             await save_stash(twitter_user_id, step);
         }
 
-        //         console.log('twitter_user_id :' + twitter_user_id)
-        //         const foo = redis_client.get(twitter_user_id, (err, reply) => {
-
-        //             if (reply) {
-        //                 console.log('stash encontrada\n')
-        //                 let stash = JSON.parse(reply);
-        //                 console.log(stash)
-
-
-
-        //                     else {
-        //                         console.log('QR foi um botão do fluxo\n')
-
-
-        //                     }).catch((err) => {
-        //                         console.log('erro no post anon-questionnaires/new\n');
-        //                         console.log(err)
-        //                     })
-        //     }
-
-        //                         console.log(next_node);
-        // }
-        //                 }
-        //             }
-        //             else {
-
-
-        //     }
-        //         });
 
     });
 
