@@ -103,6 +103,7 @@ router.post('/twitter-webhook', async (req, res) => {
         const remote_id = crypto.createHmac('sha256', twitter_user_id).digest('hex');
 
         let stash = await get_stash(twitter_user_id);
+        stash = JSON.parse(stash);
         console.log(stash);
 
         if (stash) {
@@ -139,52 +140,17 @@ router.post('/twitter-webhook', async (req, res) => {
                             console.log(stash);
                             await save_stash(twitter_user_id, stash);
                         }
-                    } else {
-                        console.log('QR foi uma resposta de questionario\n')
-                        const chosen_opt = quick_reply.substring(8);
-                        console.log('chosen_opt: ' + chosen_opt)
-
-                        const metadata = JSON.parse(quick_reply);
-                        console.log(metadata)
-
-                        // axios({
-                        //     method: 'post',
-                        //     url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/new',
-                        //     data: bodyFormData,
-                        //     headers: bodyFormData.getHeaders(),
-                        // }).then((res) => {
-                        //     const next_message = res.data.quiz_session.current_msg;
-
-                        //     if (next_message) {
-                        //         console.log('fazendo post da proxima mensagem\n')
-                        //         client.post("direct_messages/events/new", {
-                        //             event: {
-                        //                 type: "message_create",
-
-                        //                 message_create: {
-
-                        //                     target: { recipient_id: twitter_user_id },
-
-                        //                     message_data: {
-                        //                         text: next_message.content,
-                        //                         quick_reply: {
-                        //                             type: 'options',
-                        // options: next_message.options.map((opt) => {
-                        //     return { label: opt.display.substring(0, 36), metadata: 'questionnaire_' + opt.code_value }
-                        // })
-                        //                         }
-                        //                     },
-
-                        //                 }
-                        //             }
-                        //         }).catch(err => {
-                        //             console.log('erro no post dm/events/new\n');
-                        //             console.log(err);
-                        //         })
-
-
                     }
+                } else {
+                    console.log('QR foi uma resposta de questionario\n')
+                    const chosen_opt = quick_reply.substring(8);
+                    console.log('chosen_opt: ' + chosen_opt)
+
+                    const metadata = JSON.parse(quick_reply);
+                    console.log(metadata)
+
                 }
+
             }
         }
         else {
