@@ -121,7 +121,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                     if (next_node.questionnaire_id) {
 
-                        const foo = await post_questionnaire(twitter_user_id, next_node, questionnaire_id);
+                        const foo = await post_questionnaire(twitter_user_id, next_node, next_node.questionnaire_id);
                         console.log('===============================\n');
                         console.log(foo);
                         console.log('===============================\n');
