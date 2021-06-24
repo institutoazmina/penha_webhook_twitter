@@ -46,7 +46,7 @@ async function get_stash(twitter_user_id) {
     return await redis_client.getAsync(twitter_user_id);
 }
 
-async function send_dm(twitter_use_id, text, options) {
+async function send_dm(twitter_user_id, text, options) {
     let message_data;
     if (options) {
         message_data = {
