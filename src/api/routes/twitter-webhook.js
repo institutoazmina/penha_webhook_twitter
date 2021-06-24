@@ -43,7 +43,7 @@ async function post_questionnaire(twitter_user_id, questionnaire_id) {
 }
 
 async function get_stash(twitter_user_id) {
-    return redis_client.get(twitter_user_id);
+    return await redis_client.getAsync(twitter_user_id);
 }
 
 router.get('/twitter-webhook', (req, res) => {
