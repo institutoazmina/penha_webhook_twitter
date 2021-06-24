@@ -187,7 +187,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                 return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
                             }));
                         } else {
-                            await send_dm(twitter_user_id, 'Fim do fluxo disponível, reiniciando');
+                            await send_dm(twitter_user_id, 'Fim do fluxo disponível, envie "reiniciar"');
                             await delete_stash(twitter_user_id);
                         }
 
