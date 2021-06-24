@@ -164,39 +164,81 @@ router.post('/twitter-webhook', async (req, res) => {
                     console.log('chosen_opt: ' + chosen_opt)
 
                     const metadata = JSON.parse(quick_reply);
-                    console.log(metadata)
+                    console.log(metadata);
 
-                    const answer = await post_answer(metadata.session_id, metadata.question_ref, metadata.index);
+                    if (metadata.is_questionnaire) {
+                        const answer = await post_answer(metadata.session_id, metadata.question_ref, metadata.index);
 
-                    if (answer.data.quiz_session.current_msgs[0]) {
-                        const next_message = answer.data.quiz_session.current_msgs[0];
+                        answer.data.quiz_session.current_msgs.forEach(async msg => {
+                            if (msg.type === 'yesno') {
+                                await send_dm(twitter_user_id, msg.content, [
+                                    {
+                                        label: 'Sim',
+                                        metadata: JSON.stringify({ question_ref: msg.ref, index: 'Y', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
+                                    },
+                                    {
+                                        label: 'Não',
+                                        metadata: JSON.stringify({ question_ref: msg.ref, index: 'N', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
+                                    }
+                                ]);
+                            } else if (msg.type === 'onlychoice') {
+                                await send_dm(twitter_user_id, msg.content, msg.options.map((opt) => {
+                                    return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: msg.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
+                                }));
+                            }
+                            else if (msg.type === 'displaytext') {
+                                await send_dm(twitter_user_id, msg.content)
+                            }
+                            else if (msg.type === 'button') {
+                                await send_dm(twitter_user_id, msg.content, [
+                                    {
+                                        label: msg.label,
+                                        metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_restart: true })
+                                    }
+                                ]);
+                            }
+                            // else {
+                            //     await send_dm(twitter_user_id, 'Fim do fluxo disponível, envie "reiniciar"');
+                            //     await delete_stash(twitter_user_id);
+                            // }
+                        });
 
-                        if (next_message.type === 'yesno') {
-                            await send_dm(twitter_user_id, next_message.content, [
-                                {
-                                    label: 'Sim',
-                                    metadata: JSON.stringify({ question_ref: next_message.ref, index: 'Y', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
-                                },
-                                {
-                                    label: 'Não',
-                                    metadata: JSON.stringify({ question_ref: next_message.ref, index: 'N', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
-                                }
-                            ]);
-                        } else if (next_message.type === 'onlychoice') {
-                            await send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
-                                return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
-                            }));
-                        } else {
-                            await send_dm(twitter_user_id, 'Fim do fluxo disponível, envie "reiniciar"');
-                            await delete_stash(twitter_user_id);
-                        }
-
-                        stash.current_questionnaire_question = next_message.code;
-                        await save_stash(twitter_user_id, stash);
                     }
-                    else {
+                    else if (metadata.is_restart) {
                         await delete_stash(twitter_user_id);
+                        await send_dm(twitter_user_id, 'Fluxo reiniciado, na próxima mensagem você irá receber a mensagem inicial.')
                     }
+
+
+                    // if (answer.data.quiz_session.current_msgs[0]) {
+                    //     const next_message = answer.data.quiz_session.current_msgs[0];
+
+                    //     if (next_message.type === 'yesno') {
+                    //         await send_dm(twitter_user_id, next_message.content, [
+                    //             {
+                    //                 label: 'Sim',
+                    //                 metadata: JSON.stringify({ question_ref: next_message.ref, index: 'Y', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
+                    //             },
+                    //             {
+                    //                 label: 'Não',
+                    //                 metadata: JSON.stringify({ question_ref: next_message.ref, index: 'N', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
+                    //             }
+                    //         ]);
+                    //     } else if (next_message.type === 'onlychoice') {
+                    //         await send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
+                    //             return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
+                    //         }));
+                    //     } else {
+                    //         await send_dm(twitter_user_id, 'Fim do fluxo disponível, envie "reiniciar"');
+                    //         await delete_stash(twitter_user_id);
+                    //     }
+
+                    // stash.current_questionnaire_question = next_message.code;
+                    // await save_stash(twitter_user_id, stash);
+                    // }
+                    //     else {
+                    //     await delete_stash(twitter_user_id);
+                    // }
                 }
 
             }
