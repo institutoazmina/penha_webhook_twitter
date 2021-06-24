@@ -46,6 +46,36 @@ async function get_stash(twitter_user_id) {
     return await redis_client.getAsync(twitter_user_id);
 }
 
+async function send_dm(twitter_use_id, text, options) {
+    let message_data;
+    if (options) {
+        message_data = {
+            text: text,
+
+            quick_reply: {
+                type: 'options',
+                options: node.quick_replies
+            }
+        }
+    }
+    else {
+        message_data = {
+            text: text
+        }
+    }
+
+    return await client.post("direct_messages/events/new", {
+        event: {
+            type: "message_create",
+
+            message_create: {
+                target: { recipient_id: twitter_user_id },
+                message_data: message_data
+            }
+        }
+    });
+}
+
 router.get('/twitter-webhook', (req, res) => {
     const { crc_token } = req.query;
 
@@ -66,8 +96,30 @@ router.post('/twitter-webhook', async (req, res) => {
         const twitter_user_id = dm.message_create.sender_id;
         const remote_id = crypto.createHmac('sha256', twitter_user_id).digest('hex');
 
-        stash = await get_stash(twitter_user_id);
+        const stash = await get_stash(twitter_user_id);
         console.log(stash);
+
+        if (stash) {
+
+        }
+        else {
+            // Começando coversa
+            const node = flow[0];
+            const step = {
+                current_node: flow[0].code,
+                started_at: Date.now()
+            }
+
+            console.log(node.quick_replies);
+            // Verificando por mensagens
+            const messages = node.messages;
+            if (messages) {
+                const text = messages.join('\n');
+                await send_dm(twitter_user_id, text, node.quick_replies);
+            }
+            redis_client.set(twitter_user_id, JSON.stringify(step));
+        }
+
         //         console.log('twitter_user_id :' + twitter_user_id)
         //         const foo = redis_client.get(twitter_user_id, (err, reply) => {
 
@@ -153,41 +205,6 @@ router.post('/twitter-webhook', async (req, res) => {
         //                 }
         //             }
         //             else {
-        //         // Começando coversa
-        //         const node = flow[0];
-        //         const step = {
-        //             current_node: flow[0].code,
-        //             started_at: Date.now()
-        //         }
-        //                 redis_client.set(twitter_user_id, JSON.stringify(step));
-        //         console.log(node.quick_replies);
-        //         // Verificando por mensagens
-        //         const messages = node.messages;
-        //         if(messages) {
-
-        //             client.post("direct_messages/events/new", {
-        //                 event: {
-        //                     type: "message_create",
-
-        //                     message_create: {
-
-        //                         target: { recipient_id: twitter_user_id },
-
-        //                         message_data: {
-        //                             text: messages.join('\n'),
-        //                             quick_reply: {
-        //                                 type: 'options',
-        //                                 options: node.quick_replies
-        //                             }
-        //                         },
-
-        //                     }
-        //                 }
-
-        //             }).catch(err => {
-        //                 console.log(err);
-        //             })
-        //         }
 
 
         //     }
