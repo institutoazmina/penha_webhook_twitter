@@ -175,16 +175,19 @@ router.post('/twitter-webhook', async (req, res) => {
                             return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
                         }));
 
-                        stash.current_node = next_node.code;
-                        stash.is_questionnaire = true;
-                        stash.current_questionnaire_question = next_message.code
-                        console.log('nova stash: ');
-                        console.log(stash);
+                        stash.current_questionnaire_question = next_message.code;
                         await save_stash(twitter_user_id, stash);
                     }
                     else {
                         await delete_stash(twitter_user_id);
                     }
+                }
+
+            }
+            else {
+                if (dm.message_create.message_data.text === 'reiniciar') {
+                    await delete_stash(twitter_user_id);
+                    await send_dm(twitter_user_id, "Certo, vou deletar minha memória sobre você, na próxima mensagem irei te responder com a primeira mensagem do fluxo.");
                 }
 
             }

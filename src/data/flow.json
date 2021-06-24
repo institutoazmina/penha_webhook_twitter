@@ -4,16 +4,11 @@
         "type": "text_message",
         "input_type": "quick_reply",
         "messages": [
-            "Olá, blablabla...",
-            "Escolha uma das opções: "
+            "Aperte no botão abaixo para iniciar o questionário"
         ],
         "quick_replies": [
             {
-                "label": "foo",
-                "metadata": "node_3"
-            },
-            {
-                "label": "bar",
+                "label": "Iniciar",
                 "metadata": "node_3"
             }
         ],
