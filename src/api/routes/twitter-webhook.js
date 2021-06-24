@@ -40,20 +40,14 @@ router.post('/twitter-webhook', (req, res) => {
     const direct_messages = req.body.direct_message_events;
 
     direct_messages.forEach(dm => {
-        console.log(dm);
-        console.log("================\n");
-        console.log(dm.message_create.message_data.quick_reply_response);
-
         const twitter_user_id = dm.message_create.sender_id;
         const remote_id = crypto.createHmac('sha256', twitter_user_id).digest('hex');
 
         console.log('twitter_user_id :' + twitter_user_id)
         const foo = redis_client.get(twitter_user_id, (err, reply) => {
-            console.log("err: " + err);
-            console.log("reply: " + reply);
 
             if (reply) {
-                console.log('tem')
+                console.log('stash encontrada\n')
                 let stash = JSON.parse(reply);
                 console.log(stash)
 
@@ -66,10 +60,13 @@ router.post('/twitter-webhook', (req, res) => {
                     const quick_reply = dm.message_create.message_data.quick_reply_response.metadata;
 
                     if (quick_reply.substring(0, 13) === 'questionnaire') {
+                        console.log('QR foi uma resposta de questionario\n')
                         const chosen_opt = quick_reply.substring(14);
                         console.log('chosen_opt: ' + chosen_opt)
                     }
                     else {
+                        console.log('QR foi um botão do fluxo\n')
+
                         let next_node = flow.filter((n) => {
                             return n.code === quick_reply;
                         });
@@ -81,6 +78,7 @@ router.post('/twitter-webhook', (req, res) => {
                             bodyFormData.append('remote_id', twitter_user_id);
                             bodyFormData.append('questionnaire_id', next_node.questionnaire_id);
 
+                            console.log('fazendo post do questionario\n')
                             axios({
                                 method: 'post',
                                 url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/new',
@@ -90,6 +88,7 @@ router.post('/twitter-webhook', (req, res) => {
                                 const next_message = res.data.quiz_session.current_msg;
 
                                 if (next_message) {
+                                    console.log('fazendo post da proxima mensagem\n')
                                     client.post("direct_messages/events/new", {
                                         event: {
                                             type: "message_create",
@@ -111,6 +110,7 @@ router.post('/twitter-webhook', (req, res) => {
                                             }
                                         }
                                     }).catch(err => {
+                                        console.log('erro no post dm/events/new\n');
                                         console.log(err);
                                     })
 
@@ -120,9 +120,9 @@ router.post('/twitter-webhook', (req, res) => {
                                     redis_client.set(twitter_user_id, JSON.stringify(stash));
 
                                 }
-                                console.log(res.data);
-                                console.log(req);
+
                             }).catch((err) => {
+                                console.log('erro no post anon-questionnaires/new\n');
                                 console.log(err)
                             })
                         }
