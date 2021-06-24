@@ -42,7 +42,20 @@ async function post_questionnaire(twitter_user_id, questionnaire_id) {
     });
 }
 
-async function post_answer(twitter_user_id, questionnaire_id) { }
+async function post_answer(session_id, question_ref, index) {
+    const bodyFormData = new FormData();
+    bodyFormData.append('token', process.env.PENHAS_API_TOKEN);
+    bodyFormData.append('session_id', session_id);
+    bodyFormData.append(question_ref, index);
+    console.log('fazendo post do questionario\n')
+
+    return await axios({
+        method: 'post',
+        url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/process',
+        data: bodyFormData,
+        headers: bodyFormData.getHeaders(),
+    });
+}
 
 async function get_stash(twitter_user_id) {
     return await redis_client.getAsync(twitter_user_id);
@@ -50,6 +63,10 @@ async function get_stash(twitter_user_id) {
 
 async function save_stash(twitter_user_id, stash) {
     return await redis_client.setAsync(twitter_user_id, JSON.stringify(stash));
+}
+
+async function delete_stash(twitter_user_id) {
+    return await redis_client.delAsync(twitter_user_id);
 }
 
 async function send_dm(twitter_user_id, text, options) {
@@ -130,7 +147,7 @@ router.post('/twitter-webhook', async (req, res) => {
                             const next_message = questionnaire_data.quiz_session.current_msgs[0];
 
                             await send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
-                                return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, is_questionnaire: true }) }
+                                return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: questionnaire_id.quiz_session.session_id, is_questionnaire: true }) }
                             }));
 
                             stash.current_node = next_node.code;
@@ -149,6 +166,25 @@ router.post('/twitter-webhook', async (req, res) => {
                     const metadata = JSON.parse(quick_reply);
                     console.log(metadata)
 
+                    const answer = await post_answer(metadata.session_id, metadata.question_ref, metadata.index);
+
+                    if (answer.data.quiz_session.current_msgs[0]) {
+                        const next_message = questionnaire_data.quiz_session.current_msgs[0];
+
+                        await send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
+                            return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: questionnaire_id.quiz_session.session_id, is_questionnaire: true }) }
+                        }));
+
+                        stash.current_node = next_node.code;
+                        stash.is_questionnaire = true;
+                        stash.current_questionnaire_question = next_message.code
+                        console.log('nova stash: ');
+                        console.log(stash);
+                        await save_stash(twitter_user_id, stash);
+                    }
+                    else {
+                        await delete_stash(twitter_user_id);
+                    }
                 }
 
             }
