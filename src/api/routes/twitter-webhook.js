@@ -167,9 +167,9 @@ router.post('/twitter-webhook', async (req, res) => {
                     console.log(metadata)
 
                     const answer = await post_answer(metadata.session_id, metadata.question_ref, metadata.index);
-                    console.log(answer);
+
                     if (answer.data.quiz_session.current_msgs[0]) {
-                        const next_message = answer.quiz_session.current_msgs[0];
+                        const next_message = answer.data.quiz_session.current_msgs[0];
 
                         await send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
                             return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: answer.quiz_session.session_id, is_questionnaire: true }) }
