@@ -100,7 +100,74 @@ router.post('/twitter-webhook', async (req, res) => {
         console.log(stash);
 
         if (stash) {
+            let node = flow.filter((n) => {
+                return n.code === stash.current_node;
+            });
+            node = node[0];
 
+            if (dm.message_create.message_data.quick_reply_response) {
+                const quick_reply = dm.message_create.message_data.quick_reply_response.metadata;
+
+                if (quick_reply.substring(0, 13) === 'questionnaire') {
+                    console.log('QR foi uma resposta de questionario\n')
+                    const chosen_opt = quick_reply.substring(14);
+                    console.log('chosen_opt: ' + chosen_opt)
+                } else {
+
+                    let next_node = flow.filter((n) => {
+                        return n.code === quick_reply;
+                    });
+                    next_node = next_node[0];
+
+                    if (next_node.questionnaire_id) {
+
+                        const foo = await post_questionnaire(twitter_user_id, next_node, questionnaire_id);
+                        console.log('===============================\n');
+                        console.log(foo);
+                        console.log('===============================\n');
+                        // axios({
+                        //     method: 'post',
+                        //     url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/new',
+                        //     data: bodyFormData,
+                        //     headers: bodyFormData.getHeaders(),
+                        // }).then((res) => {
+                        //     const next_message = res.data.quiz_session.current_msg;
+
+                        //     if (next_message) {
+                        //         console.log('fazendo post da proxima mensagem\n')
+                        //         client.post("direct_messages/events/new", {
+                        //             event: {
+                        //                 type: "message_create",
+
+                        //                 message_create: {
+
+                        //                     target: { recipient_id: twitter_user_id },
+
+                        //                     message_data: {
+                        //                         text: next_message.content,
+                        //                         quick_reply: {
+                        //                             type: 'options',
+                        //                             options: next_message.options.map((opt) => {
+                        //                                 return { label: opt.display.substring(0, 36), metadata: 'questionnaire_' + opt.code_value }
+                        //                             })
+                        //                         }
+                        //                     },
+
+                        //                 }
+                        //             }
+                        //         }).catch(err => {
+                        //             console.log('erro no post dm/events/new\n');
+                        //             console.log(err);
+                        //         })
+
+                        // stash.current_node = next_node.code;
+                        // stash.is_questionnaire = true;
+                        // stash.current_questionnaire_question = next_message.code
+                        // redis_client.set(twitter_user_id, JSON.stringify(stash));
+
+                    }
+                }
+            }
         }
         else {
             // Começando coversa
@@ -128,71 +195,11 @@ router.post('/twitter-webhook', async (req, res) => {
         //                 let stash = JSON.parse(reply);
         //                 console.log(stash)
 
-        //                 let node = flow.filter((n) => {
-        //                     return n.code === stash.current_node;
-        //                 });
-        //                 node = node[0];
 
-        //                 if (dm.message_create.message_data.quick_reply_response) {
-        //                     const quick_reply = dm.message_create.message_data.quick_reply_response.metadata;
 
-        //                     if (quick_reply.substring(0, 13) === 'questionnaire') {
-        //                         console.log('QR foi uma resposta de questionario\n')
-        //                         const chosen_opt = quick_reply.substring(14);
-        //                         console.log('chosen_opt: ' + chosen_opt)
-        //                     }
         //                     else {
         //                         console.log('QR foi um botão do fluxo\n')
 
-        //                         let next_node = flow.filter((n) => {
-        //                             return n.code === quick_reply;
-        //                         });
-        //                         next_node = next_node[0];
-
-        //                         if (next_node.questionnaire_id) {
-
-        //                             await post_questionnaire(twitter_user_id, next_node, questionnaire_id);
-        //                             // axios({
-        //                             //     method: 'post',
-        //                             //     url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/new',
-        //                             //     data: bodyFormData,
-        //                             //     headers: bodyFormData.getHeaders(),
-        //                             // }).then((res) => {
-        //                             //     const next_message = res.data.quiz_session.current_msg;
-
-        //                             //     if (next_message) {
-        //                             //         console.log('fazendo post da proxima mensagem\n')
-        //                             //         client.post("direct_messages/events/new", {
-        //                             //             event: {
-        //                             //                 type: "message_create",
-
-        //                             //                 message_create: {
-
-        //                             //                     target: { recipient_id: twitter_user_id },
-
-        //                             //                     message_data: {
-        //                             //                         text: next_message.content,
-        //                             //                         quick_reply: {
-        //                             //                             type: 'options',
-        //                             //                             options: next_message.options.map((opt) => {
-        //                             //                                 return { label: opt.display.substring(0, 36), metadata: 'questionnaire_' + opt.code_value }
-        //                             //                             })
-        //                             //                         }
-        //                             //                     },
-
-        //                             //                 }
-        //                             //             }
-        //                             //         }).catch(err => {
-        //                             //             console.log('erro no post dm/events/new\n');
-        //                             //             console.log(err);
-        //                             //         })
-
-        //                             // stash.current_node = next_node.code;
-        //                             // stash.is_questionnaire = true;
-        //                             // stash.current_questionnaire_question = next_message.code
-        //                             // redis_client.set(twitter_user_id, JSON.stringify(stash));
-
-        //                         }
 
         //                     }).catch((err) => {
         //                         console.log('erro no post anon-questionnaires/new\n');
