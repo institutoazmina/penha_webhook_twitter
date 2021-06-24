@@ -3,6 +3,8 @@ const router = express.Router();
 const crypto = require('crypto');
 const redis = require('redis');
 const Twitter = require('twitter-lite');
+const FormData = require('form-data');
+const axios = require('axios');
 
 const client = new Twitter({
     consumer_key: process.env.TWITTER_CONSUMER_KEY,
@@ -52,7 +54,7 @@ router.post('/twitter-webhook', (req, res) => {
 
             if (reply) {
                 console.log('tem')
-                const stash = JSON.parse(reply);
+                let stash = JSON.parse(reply);
                 console.log(stash)
 
                 let node = flow.filter((n) => {
@@ -63,46 +65,70 @@ router.post('/twitter-webhook', (req, res) => {
                 if (dm.message_create.message_data.quick_reply_response) {
                     const quick_reply = dm.message_create.message_data.quick_reply_response.metadata;
 
-                    let next_node = flow.filter((n) => {
-                        return n.code === quick_reply;
-                    });
-                    next_node = next_node[0];
+                    if (quick_reply.substring(0, 13) === 'questionnaire') {
+                        const chosen_opt = quick_reply.substring(14);
+                        console.log('chosen_opt: ' + chosen_opt)
+                    }
+                    else {
+                        let next_node = flow.filter((n) => {
+                            return n.code === quick_reply;
+                        });
+                        next_node = next_node[0];
 
-                    if (next_node.questionnaire_id) {
-                        client.post("direct_messages/events/new", {
-                            event: {
-                                type: "message_create",
+                        if (next_node.questionnaire_id) {
+                            const bodyFormData = new FormData();
+                            bodyFormData.append('token', process.env.PENHAS_API_TOKEN);
+                            bodyFormData.append('remote_id', twitter_user_id);
+                            bodyFormData.append('questionnaire_id', next_node.questionnaire_id);
 
-                                message_create: {
+                            axios({
+                                method: 'post',
+                                url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/new',
+                                data: bodyFormData,
+                                headers: bodyFormData.getHeaders(),
+                            }).then((res) => {
+                                const next_message = res.data.quiz_session.current_msg;
 
-                                    target: { recipient_id: twitter_user_id },
+                                if (next_message) {
+                                    client.post("direct_messages/events/new", {
+                                        event: {
+                                            type: "message_create",
 
-                                    message_data: {
-                                        text: "por que você chegou aqui",
-                                        quick_reply: {
-                                            type: 'options',
-                                            options: [
-                                                {
-                                                    label: "quero saber mais sobre rel. abusivo",
-                                                    metadata: "p2a"
+                                            message_create: {
+
+                                                target: { recipient_id: twitter_user_id },
+
+                                                message_data: {
+                                                    text: next_message.content,
+                                                    quick_reply: {
+                                                        type: 'options',
+                                                        options: next_message.options.map((opt) => {
+                                                            return { label: opt.display.substring(0, 36), metadata: 'questionnaire_' + opt.code_value }
+                                                        })
+                                                    }
                                                 },
-                                                {
-                                                    label: "estou num rel. abusivo e quero ajuda",
-                                                    metadata: "p2b"
-                                                }
-                                            ]
+
+                                            }
                                         }
-                                    },
+                                    }).catch(err => {
+                                        console.log(err);
+                                    })
+
+                                    stash.current_node = next_node.code;
+                                    stash.is_questionnaire = true;
+                                    stash.current_questionnaire_question = next_message.code
+                                    redis_client.set(twitter_user_id, JSON.stringify(stash));
 
                                 }
-                            }
+                                console.log(res.data);
+                                console.log(req);
+                            }).catch((err) => {
+                                console.log(err)
+                            })
+                        }
 
-                        }).catch(err => {
-                            console.log(err);
-                        })
+                        console.log(next_node);
                     }
-
-                    console.log(next_node);
                 }
             }
             else {

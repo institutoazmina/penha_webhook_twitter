@@ -10,7 +10,7 @@
         "quick_replies": [
             {
                 "label": "foo",
-                "metadata": "node_2"
+                "metadata": "node_3"
             },
             {
                 "label": "bar",
@@ -26,7 +26,7 @@
     {
         "code": "node_3",
         "type": "questionnaire",
-        "questionnaire_id": "XXXXXXXXXXX",
+        "questionnaire_id": "8",
         "is_conversation_end": true,
         "on_conversation_end": "restart",
         "parent": "node_1",
