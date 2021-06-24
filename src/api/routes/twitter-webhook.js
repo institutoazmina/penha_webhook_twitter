@@ -34,7 +34,7 @@ async function post_questionnaire(twitter_user_id, questionnaire_id) {
     bodyFormData.append('questionnaire_id', questionnaire_id);
     console.log('fazendo post do questionario\n')
 
-    return axios({
+    return await axios({
         method: 'post',
         url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/new',
         data: bodyFormData,
