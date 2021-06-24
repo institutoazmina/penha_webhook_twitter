@@ -54,7 +54,7 @@ async function send_dm(twitter_use_id, text, options) {
 
             quick_reply: {
                 type: 'options',
-                options: node.quick_replies
+                options: options
             }
         }
     }
