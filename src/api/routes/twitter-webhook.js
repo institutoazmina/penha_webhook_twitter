@@ -96,7 +96,7 @@ router.post('/twitter-webhook', async (req, res) => {
         const twitter_user_id = dm.message_create.sender_id;
         const remote_id = crypto.createHmac('sha256', twitter_user_id).digest('hex');
 
-        const stash = await get_stash(twitter_user_id);
+        let stash = await get_stash(twitter_user_id);
         console.log(stash);
 
         if (stash) {
@@ -121,10 +121,21 @@ router.post('/twitter-webhook', async (req, res) => {
 
                     if (next_node.questionnaire_id) {
 
-                        const foo = await post_questionnaire(twitter_user_id, next_node.questionnaire_id);
-                        console.log('===============================\n');
-                        console.log(foo);
-                        console.log('===============================\n');
+                        const questionnaire_create = await post_questionnaire(twitter_user_id, next_node.questionnaire_id);
+                        const questionnaire_data = questionnaire_create.data;
+
+                        if (questionnaire_data.quiz_session.current_messages[0]) {
+                            const next_message = questionnaire_data.quiz_session.current_messages[0];
+
+                            await send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
+                                return { label: opt.display.substring(0, 36), metadata: 'questionnaire_' + opt.code_value }
+                            }));
+
+                            stash.current_node = next_node.code;
+                            stash.is_questionnaire = true;
+                            stash.current_questionnaire_question = next_message.code
+                            redis_client.set(twitter_user_id, JSON.stringify(stash));
+                        }
                         // axios({
                         //     method: 'post',
                         //     url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/new',
@@ -147,9 +158,9 @@ router.post('/twitter-webhook', async (req, res) => {
                         //                         text: next_message.content,
                         //                         quick_reply: {
                         //                             type: 'options',
-                        //                             options: next_message.options.map((opt) => {
-                        //                                 return { label: opt.display.substring(0, 36), metadata: 'questionnaire_' + opt.code_value }
-                        //                             })
+                        // options: next_message.options.map((opt) => {
+                        //     return { label: opt.display.substring(0, 36), metadata: 'questionnaire_' + opt.code_value }
+                        // })
                         //                         }
                         //                     },
 
@@ -160,10 +171,6 @@ router.post('/twitter-webhook', async (req, res) => {
                         //             console.log(err);
                         //         })
 
-                        // stash.current_node = next_node.code;
-                        // stash.is_questionnaire = true;
-                        // stash.current_questionnaire_question = next_message.code
-                        // redis_client.set(twitter_user_id, JSON.stringify(stash));
 
                     }
                 }
