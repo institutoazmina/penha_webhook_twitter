@@ -124,8 +124,8 @@ router.post('/twitter-webhook', async (req, res) => {
                         const questionnaire_create = await post_questionnaire(twitter_user_id, next_node.questionnaire_id);
                         const questionnaire_data = questionnaire_create.data;
 
-                        if (questionnaire_data.quiz_session.current_messages[0]) {
-                            const next_message = questionnaire_data.quiz_session.current_messages[0];
+                        if (questionnaire_data.quiz_session.current_msgs[0]) {
+                            const next_message = questionnaire_data.quiz_session.current_msgs[0];
 
                             await send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
                                 return { label: opt.display.substring(0, 36), metadata: 'questionnaire_' + opt.code_value }
