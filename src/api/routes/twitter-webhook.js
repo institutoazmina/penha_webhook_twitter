@@ -167,7 +167,7 @@ router.post('/twitter-webhook', async (req, res) => {
                     console.log(metadata)
 
                     const answer = await post_answer(metadata.session_id, metadata.question_ref, metadata.index);
-
+                    console.log(answer);
                     if (answer.data.quiz_session.current_msgs[0]) {
                         const next_message = answer.quiz_session.current_msgs[0];
 
