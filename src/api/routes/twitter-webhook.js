@@ -93,7 +93,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                             answer.data.quiz_session.current_msgs.forEach(async msg => {
                                 setTimeout(
-                                    () => {
+                                    async () => {
                                         if (msg.type === 'yesno') {
                                             await twitter_api.send_dm(twitter_user_id, msg.content, [
                                                 {
@@ -160,7 +160,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                             answer.data.quiz_session.current_msgs.forEach(async msg => {
                                 setTimeout(
-                                    () => {
+                                    async () => {
                                         if (msg.type === 'yesno') {
                                             await twitter_api.send_dm(twitter_user_id, msg.content, [
                                                 {
