@@ -116,7 +116,8 @@ router.post('/twitter-webhook', async (req, res) => {
                                             await twitter_api.send_dm(twitter_user_id, msg.content)
                                         }
                                         else if (msg.type === 'button') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content, [
+                                            const content = msg.content.length > 1 ? msg.content : 'Texto de finalização do questionário';
+                                            await twitter_api.send_dm(twitter_user_id, content, [
                                                 {
                                                     label: msg.label,
                                                     metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_restart: true })
@@ -183,7 +184,8 @@ router.post('/twitter-webhook', async (req, res) => {
                                             await twitter_api.send_dm(twitter_user_id, msg.content)
                                         }
                                         else if (msg.type === 'button') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content, [
+                                            const content = msg.content.length > 1 ? msg.content : 'Texto de finalização do questionário';
+                                            await twitter_api.send_dm(twitter_user_id, content, [
                                                 {
                                                     label: msg.label,
                                                     metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_restart: true })
