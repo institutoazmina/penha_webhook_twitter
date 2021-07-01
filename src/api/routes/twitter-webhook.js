@@ -5,23 +5,12 @@ const Twitter = require('twitter-lite');
 const FormData = require('form-data');
 const axios = require('axios');
 
-const bluebird = require('bluebird');
-const redis = require('redis');
-bluebird.promisifyAll(redis.RedisClient.prototype);
-bluebird.promisifyAll(redis.Multi.prototype);
+const stasher = require('../stash');
+const twitter_api = require('../../webservices/twitter');
 
-const client = new Twitter({
-    consumer_key: process.env.TWITTER_CONSUMER_KEY,
-    consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
-    // bearer_token: process.env.TWITTER_BEARER_TOKEN,
-    access_token_key: process.env.TWITTER_ACCESS_TOKEN,
-    access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
-});
 
 const flow = require('./../../data/flow.json');
-console.log(flow);
 
-const redis_client = redis.createClient();
 
 function get_challenge_response(crc_token, consumer_secret) {
     return crypto.createHmac('sha256', consumer_secret).update(crc_token).digest('base64');
@@ -57,48 +46,6 @@ async function post_answer(session_id, question_ref, index) {
     });
 }
 
-async function get_stash(twitter_user_id) {
-    return await redis_client.getAsync(twitter_user_id);
-}
-
-async function save_stash(twitter_user_id, stash) {
-    return await redis_client.setAsync(twitter_user_id, JSON.stringify(stash));
-}
-
-async function delete_stash(twitter_user_id) {
-    return await redis_client.delAsync(twitter_user_id);
-}
-
-async function send_dm(twitter_user_id, text, options) {
-    let message_data;
-    if (options) {
-        message_data = {
-            text: text,
-
-            quick_reply: {
-                type: 'options',
-                options: options
-            }
-        }
-    }
-    else {
-        message_data = {
-            text: text
-        }
-    }
-
-    return await client.post("direct_messages/events/new", {
-        event: {
-            type: "message_create",
-
-            message_create: {
-                target: { recipient_id: twitter_user_id },
-                message_data: message_data
-            }
-        }
-    });
-}
-
 router.get('/twitter-webhook', (req, res) => {
     const { crc_token } = req.query;
 
@@ -119,7 +66,7 @@ router.post('/twitter-webhook', async (req, res) => {
         const twitter_user_id = dm.message_create.sender_id;
         const remote_id = crypto.createHmac('sha256', twitter_user_id).digest('hex');
 
-        let stash = await get_stash(twitter_user_id);
+        let stash = await stasher.get_stash(twitter_user_id);
         stash = JSON.parse(stash);
         console.log(stash);
 
@@ -146,7 +93,7 @@ router.post('/twitter-webhook', async (req, res) => {
                         if (questionnaire_data.quiz_session.current_msgs[0]) {
                             const next_message = questionnaire_data.quiz_session.current_msgs[0];
 
-                            await send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
+                            await twitter_api.send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
                                 return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: questionnaire_data.quiz_session.session_id, is_questionnaire: true }) }
                             }));
 
@@ -155,7 +102,7 @@ router.post('/twitter-webhook', async (req, res) => {
                             stash.current_questionnaire_question = next_message.code
                             console.log('nova stash: ');
                             console.log(stash);
-                            await save_stash(twitter_user_id, stash);
+                            await stasher.save_stash(twitter_user_id, stash);
                         }
                     }
                 } else {
@@ -171,7 +118,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                         answer.data.quiz_session.current_msgs.forEach(async msg => {
                             if (msg.type === 'yesno') {
-                                await send_dm(twitter_user_id, msg.content, [
+                                await twitter_api.send_dm(twitter_user_id, msg.content, [
                                     {
                                         label: 'Sim',
                                         metadata: JSON.stringify({ question_ref: msg.ref, index: 'Y', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
@@ -182,15 +129,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                     }
                                 ]);
                             } else if (msg.type === 'onlychoice') {
-                                await send_dm(twitter_user_id, msg.content, msg.options.map((opt) => {
+                                await twitter_api.send_dm(twitter_user_id, msg.content, msg.options.map((opt) => {
                                     return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: msg.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
                                 }));
                             }
                             else if (msg.type === 'displaytext') {
-                                await send_dm(twitter_user_id, msg.content)
+                                await twitter_api.send_dm(twitter_user_id, msg.content)
                             }
                             else if (msg.type === 'button') {
-                                await send_dm(twitter_user_id, msg.content, [
+                                await twitter_api.send_dm(twitter_user_id, msg.content, [
                                     {
                                         label: msg.label,
                                         metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_restart: true })
@@ -198,15 +145,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                 ]);
                             }
                             // else {
-                            //     await send_dm(twitter_user_id, 'Fim do fluxo disponível, envie "reiniciar"');
-                            //     await delete_stash(twitter_user_id);
+                            //     await twitter_api.send_dm(twitter_user_id, 'Fim do fluxo disponível, envie "reiniciar"');
+                            //     await stasher.delete_stash(twitter_user_id);
                             // }
                         });
 
                     }
                     else if (metadata.is_restart) {
-                        await delete_stash(twitter_user_id);
-                        await send_dm(twitter_user_id, 'Fluxo reiniciado, na próxima mensagem você irá receber a mensagem inicial.')
+                        await stasher.delete_stash(twitter_user_id);
+                        await twitter_api.send_dm(twitter_user_id, 'Fluxo reiniciado, na próxima mensagem você irá receber a mensagem inicial.')
                     }
 
 
@@ -214,7 +161,7 @@ router.post('/twitter-webhook', async (req, res) => {
                     //     const next_message = answer.data.quiz_session.current_msgs[0];
 
                     //     if (next_message.type === 'yesno') {
-                    //         await send_dm(twitter_user_id, next_message.content, [
+                    //         await twitter_api.send_dm(twitter_user_id, next_message.content, [
                     //             {
                     //                 label: 'Sim',
                     //                 metadata: JSON.stringify({ question_ref: next_message.ref, index: 'Y', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
@@ -225,27 +172,27 @@ router.post('/twitter-webhook', async (req, res) => {
                     //             }
                     //         ]);
                     //     } else if (next_message.type === 'onlychoice') {
-                    //         await send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
+                    //         await twitter_api.send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
                     //             return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
                     //         }));
                     //     } else {
-                    //         await send_dm(twitter_user_id, 'Fim do fluxo disponível, envie "reiniciar"');
-                    //         await delete_stash(twitter_user_id);
+                    //         await twitter_api.send_dm(twitter_user_id, 'Fim do fluxo disponível, envie "reiniciar"');
+                    //         await stasher.delete_stash(twitter_user_id);
                     //     }
 
                     // stash.current_questionnaire_question = next_message.code;
-                    // await save_stash(twitter_user_id, stash);
+                    // await stasher.save_stash(twitter_user_id, stash);
                     // }
                     //     else {
-                    //     await delete_stash(twitter_user_id);
+                    //     await stasher.delete_stash(twitter_user_id);
                     // }
                 }
 
             }
             else {
                 if (dm.message_create.message_data.text === 'reiniciar') {
-                    await delete_stash(twitter_user_id);
-                    await send_dm(twitter_user_id, "Certo, vou deletar minha memória sobre você, na próxima mensagem irei te responder com a primeira mensagem do fluxo.");
+                    await stasher.delete_stash(twitter_user_id);
+                    await twitter_api.send_dm(twitter_user_id, "Certo, vou deletar minha memória sobre você, na próxima mensagem irei te responder com a primeira mensagem do fluxo.");
                 }
 
             }
@@ -263,10 +210,10 @@ router.post('/twitter-webhook', async (req, res) => {
             const messages = node.messages;
             if (messages) {
                 const text = messages.join('\n');
-                await send_dm(twitter_user_id, text, node.quick_replies);
+                await twitter_api.send_dm(twitter_user_id, text, node.quick_replies);
             }
 
-            await save_stash(twitter_user_id, step);
+            await stasher.save_stash(twitter_user_id, step);
         }
 
 
