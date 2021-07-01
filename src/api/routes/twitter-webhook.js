@@ -7,7 +7,7 @@ const axios = require('axios');
 
 const stasher = require('../stash');
 const twitter_api = require('../../webservices/twitter');
-
+const penhas_api = require('../../webservices/penhas');
 
 const flow = require('./../../data/flow.json');
 
@@ -15,36 +15,6 @@ const flow = require('./../../data/flow.json');
 function get_challenge_response(crc_token, consumer_secret) {
     return crypto.createHmac('sha256', consumer_secret).update(crc_token).digest('base64');
 };
-
-async function post_questionnaire(twitter_user_id, questionnaire_id) {
-    const bodyFormData = new FormData();
-    bodyFormData.append('token', process.env.PENHAS_API_TOKEN);
-    bodyFormData.append('remote_id', twitter_user_id);
-    bodyFormData.append('questionnaire_id', questionnaire_id);
-    console.log('fazendo post do questionario\n')
-
-    return await axios({
-        method: 'post',
-        url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/new',
-        data: bodyFormData,
-        headers: bodyFormData.getHeaders(),
-    });
-}
-
-async function post_answer(session_id, question_ref, index) {
-    const bodyFormData = new FormData();
-    bodyFormData.append('token', process.env.PENHAS_API_TOKEN);
-    bodyFormData.append('session_id', session_id);
-    bodyFormData.append(question_ref, index);
-    console.log('fazendo post do questionario\n')
-
-    return await axios({
-        method: 'post',
-        url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/process',
-        data: bodyFormData,
-        headers: bodyFormData.getHeaders(),
-    });
-}
 
 router.get('/twitter-webhook', (req, res) => {
     const { crc_token } = req.query;
@@ -88,7 +58,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                         if (next_node.questionnaire_id) {
 
-                            const questionnaire_create = await post_questionnaire(twitter_user_id, next_node.questionnaire_id);
+                            const questionnaire_create = await penhas_api.post_questionnaire(twitter_user_id, next_node.questionnaire_id);
                             const questionnaire_data = questionnaire_create.data;
 
                             if (questionnaire_data.quiz_session.current_msgs[0]) {
@@ -100,7 +70,10 @@ router.post('/twitter-webhook', async (req, res) => {
 
                                 stash.current_node = next_node.code;
                                 stash.is_questionnaire = true;
-                                stash.current_questionnaire_question = next_message.code
+                                stash.current_questionnaire_question = next_message.code;
+                                stash.current_questionnaire_question_type = next_message.type;
+                                stash.current_questionnaire_question_ref = next_message.ref;
+                                stash.session_id = questionnaire_data.quiz_session.session_id;
                                 console.log('nova stash: ');
                                 console.log(stash);
                                 await stasher.save_stash(twitter_user_id, stash);
@@ -115,7 +88,7 @@ router.post('/twitter-webhook', async (req, res) => {
                         console.log(metadata);
 
                         if (metadata.is_questionnaire) {
-                            const answer = await post_answer(metadata.session_id, metadata.question_ref, metadata.index);
+                            const answer = await penhas_api.post_answer(metadata.session_id, metadata.question_ref, metadata.index);
 
                             answer.data.quiz_session.current_msgs.forEach(async msg => {
                                 if (msg.type === 'yesno') {
@@ -145,10 +118,16 @@ router.post('/twitter-webhook', async (req, res) => {
                                         }
                                     ]);
                                 }
-                                // else {
-                                //     await twitter_api.send_dm(twitter_user_id, 'Fim do fluxo disponível, envie "reiniciar"');
-                                //     await stasher.delete_stash(twitter_user_id);
-                                // }
+                                else if (msg.type === 'text') {
+                                    await twitter_api.send_dm(twitter_user_id, msg.content);
+
+                                    stash.current_questionnaire_question = msg.code;
+                                    stash.current_questionnaire_question_type = msg.type;
+                                    stash.current_questionnaire_question_ref = msg.ref;
+
+                                    await stasher.save_stash(twitter_user_id, stash);
+                                }
+
                             });
 
                         }
@@ -158,35 +137,6 @@ router.post('/twitter-webhook', async (req, res) => {
                         }
 
 
-                        // if (answer.data.quiz_session.current_msgs[0]) {
-                        //     const next_message = answer.data.quiz_session.current_msgs[0];
-
-                        //     if (next_message.type === 'yesno') {
-                        //         await twitter_api.send_dm(twitter_user_id, next_message.content, [
-                        //             {
-                        //                 label: 'Sim',
-                        //                 metadata: JSON.stringify({ question_ref: next_message.ref, index: 'Y', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
-                        //             },
-                        //             {
-                        //                 label: 'Não',
-                        //                 metadata: JSON.stringify({ question_ref: next_message.ref, index: 'N', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
-                        //             }
-                        //         ]);
-                        //     } else if (next_message.type === 'onlychoice') {
-                        //         await twitter_api.send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
-                        //             return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
-                        //         }));
-                        //     } else {
-                        //         await twitter_api.send_dm(twitter_user_id, 'Fim do fluxo disponível, envie "reiniciar"');
-                        //         await stasher.delete_stash(twitter_user_id);
-                        //     }
-
-                        // stash.current_questionnaire_question = next_message.code;
-                        // await stasher.save_stash(twitter_user_id, stash);
-                        // }
-                        //     else {
-                        //     await stasher.delete_stash(twitter_user_id);
-                        // }
                     }
 
                 }
@@ -194,6 +144,52 @@ router.post('/twitter-webhook', async (req, res) => {
                     if (dm.message_create.message_data.text === 'reiniciar') {
                         await stasher.delete_stash(twitter_user_id);
                         await twitter_api.send_dm(twitter_user_id, "Certo, vou deletar minha memória sobre você, na próxima mensagem irei te responder com a primeira mensagem do fluxo.");
+                    }
+                    else {
+                        if (stash.is_questionnaire && stash.current_questionnaire_question_type === 'text') {
+                            const answer = await penhas_api.post_answer(stash.session_id, stash.current_questionnaire_question_ref, dm.message_create.message_data.text);
+
+                            answer.data.quiz_session.current_msgs.forEach(async msg => {
+                                if (msg.type === 'yesno') {
+                                    await twitter_api.send_dm(twitter_user_id, msg.content, [
+                                        {
+                                            label: 'Sim',
+                                            metadata: JSON.stringify({ question_ref: msg.ref, index: 'Y', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
+                                        },
+                                        {
+                                            label: 'Não',
+                                            metadata: JSON.stringify({ question_ref: msg.ref, index: 'N', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
+                                        }
+                                    ]);
+                                } else if (msg.type === 'onlychoice') {
+                                    await twitter_api.send_dm(twitter_user_id, msg.content, msg.options.map((opt) => {
+                                        return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: msg.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
+                                    }));
+                                }
+                                else if (msg.type === 'displaytext') {
+                                    await twitter_api.send_dm(twitter_user_id, msg.content)
+                                }
+                                else if (msg.type === 'button') {
+                                    await twitter_api.send_dm(twitter_user_id, msg.content, [
+                                        {
+                                            label: msg.label,
+                                            metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_restart: true })
+                                        }
+                                    ]);
+                                }
+                                else if (msg.type === 'text') {
+                                    await twitter_api.send_dm(twitter_user_id, msg.content);
+
+                                    stash.current_questionnaire_question = msg.code;
+                                    stash.current_questionnaire_question_type = msg.type;
+                                    stash.current_questionnaire_question_ref = msg.ref;
+
+                                    await stasher.save_stash(twitter_user_id, stash);
+                                }
+
+                            });
+
+                        }
                     }
 
                 }
