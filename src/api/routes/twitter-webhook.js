@@ -151,9 +151,10 @@ router.post('/twitter-webhook', async (req, res) => {
 
                 }
                 else {
-                    dm.message_create.message_data.text.toLowerCase();
+                    const untreated_msg = dm.message_create.message_data.text;
+                    const sent_msg = untreated_msg.toLowerCase();
 
-                    if (dm.message_create.message_data.text === 'reiniciar') {
+                    if (sent_msg === 'reiniciar') {
                         await stasher.delete_stash(twitter_user_id);
                         await twitter_api.send_dm(twitter_user_id, "Certo, vou deletar minha memória sobre você, na próxima mensagem irei te responder com a primeira mensagem do fluxo.");
                     }
@@ -161,7 +162,7 @@ router.post('/twitter-webhook', async (req, res) => {
                         if (stash.is_questionnaire && stash.current_questionnaire_question_type === 'text') {
                             let timeout = 0;
 
-                            const answer = await penhas_api.post_answer(stash.session_id, stash.current_questionnaire_question_ref, dm.message_create.message_data.text);
+                            const answer = await penhas_api.post_answer(stash.session_id, stash.current_questionnaire_question_ref, sent_msg);
 
                             answer.data.quiz_session.current_msgs.forEach(async msg => {
                                 setTimeout(
