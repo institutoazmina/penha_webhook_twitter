@@ -218,9 +218,9 @@ router.post('/twitter-webhook', async (req, res) => {
             }
             else {
                 // Começando coversa
-                const node = flow[0];
+                const node = flow.nodes[0];
                 const step = {
-                    current_node: flow[0].code,
+                    current_node: flow.nodes[0].code,
                     started_at: Date.now()
                 }
 
