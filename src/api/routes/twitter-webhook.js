@@ -6,10 +6,11 @@ const FormData = require('form-data');
 const axios = require('axios');
 
 const stasher = require('../stash');
+const redis = require('../../storage/redis');
 const twitter_api = require('../../webservices/twitter');
 const penhas_api = require('../../webservices/penhas');
 
-const flow = require('./../../data/flow.json');
+// const flow = require('./../../data/flow.nodes.json');
 const { time } = require('console');
 
 
@@ -31,6 +32,9 @@ router.get('/twitter-webhook', (req, res) => {
 });
 
 router.post('/twitter-webhook', async (req, res) => {
+    const encoded_flow = await redis.get('json_config');
+    const flow = JSON.parse(encoded_flow);
+
     const direct_messages = req.body.direct_message_events;
 
     if (direct_messages) {
@@ -40,10 +44,9 @@ router.post('/twitter-webhook', async (req, res) => {
 
             let stash = await stasher.get_stash(twitter_user_id);
             stash = JSON.parse(stash);
-            console.log(stash);
 
             if (stash) {
-                let node = flow.filter((n) => {
+                let node = flow.nodes.filter((n) => {
                     return n.code === stash.current_node;
                 });
                 node = node[0];
@@ -52,7 +55,7 @@ router.post('/twitter-webhook', async (req, res) => {
                     const quick_reply = dm.message_create.message_data.quick_reply_response.metadata;
 
                     if (quick_reply.substring(0, 4) === 'node') {
-                        let next_node = flow.filter((n) => {
+                        let next_node = flow.nodes.filter((n) => {
                             return n.code === quick_reply;
                         });
                         next_node = next_node[0];
@@ -75,18 +78,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                 stash.current_questionnaire_question_type = next_message.type;
                                 stash.current_questionnaire_question_ref = next_message.ref;
                                 stash.session_id = questionnaire_data.quiz_session.session_id;
-                                console.log('nova stash: ');
-                                console.log(stash);
+
                                 await stasher.save_stash(twitter_user_id, stash);
                             }
                         }
                     } else {
-                        console.log('QR foi uma resposta de questionario\n')
                         const chosen_opt = quick_reply.substring(8);
                         console.log('chosen_opt: ' + chosen_opt)
 
                         const metadata = JSON.parse(quick_reply);
-                        console.log(metadata);
 
                         if (metadata.is_questionnaire) {
                             let timeout = 0;
@@ -151,6 +151,8 @@ router.post('/twitter-webhook', async (req, res) => {
 
                 }
                 else {
+                    dm.message_create.message_data.text.toLowerCase();
+
                     if (dm.message_create.message_data.text === 'reiniciar') {
                         await stasher.delete_stash(twitter_user_id);
                         await twitter_api.send_dm(twitter_user_id, "Certo, vou deletar minha memória sobre você, na próxima mensagem irei te responder com a primeira mensagem do fluxo.");
@@ -222,7 +224,6 @@ router.post('/twitter-webhook', async (req, res) => {
                     started_at: Date.now()
                 }
 
-                console.log(node.quick_replies);
                 // Verificando por mensagens
                 const messages = node.messages;
                 if (messages) {

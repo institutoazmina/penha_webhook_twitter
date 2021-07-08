@@ -10,7 +10,7 @@ async function post_questionnaire(twitter_user_id, questionnaire_id) {
 
     return await axios({
         method: 'post',
-        url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/new',
+        url: process.env.PENHAS_API_URL + '/anon-questionnaires/new',
         data: bodyFormData,
         headers: bodyFormData.getHeaders(),
     });
@@ -25,13 +25,29 @@ async function post_answer(session_id, question_ref, index) {
 
     return await axios({
         method: 'post',
-        url: 'https://dev-penhas-api.appcivico.com/anon-questionnaires/process',
+        url: process.env.PENHAS_API_URL + '/anon-questionnaires/process',
         data: bodyFormData,
         headers: bodyFormData.getHeaders(),
     });
 }
 
+async function fetch_config_json() {
+    const bodyFormData = new FormData();
+    bodyFormData.append('token', process.env.PENHAS_API_TOKEN);
+
+    return await axios({
+        method: 'get',
+        url: process.env.PENHAS_API_URL + '/anon-questionnaires/config',
+        data: bodyFormData,
+        headers: bodyFormData.getHeaders(),
+        params: {
+            token: process.env.PENHAS_API_TOKEN
+        }
+    });
+}
+
 module.exports = {
     post_questionnaire: post_questionnaire,
-    post_answer: post_answer
+    post_answer: post_answer,
+    fetch_config_json: fetch_config_json
 }

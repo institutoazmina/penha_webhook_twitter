@@ -4,9 +4,13 @@ const winston = require('winston');
 const expressWinston = require('express-winston');
 const body_parser = require('body-parser')
 
+const penhas_api = require('../webservices/penhas');
+const redis = require('../storage/redis');
+
 // Routes
 const health_check = require('./routes/health-check');
 const twitter_webhook = require('./routes/twitter-webhook');
+const config = require('./routes/config');
 
 const app = express();
 
@@ -40,6 +44,7 @@ app.use(expressWinston.logger({
 // Routes
 app.use(health_check);
 app.use(twitter_webhook);
+app.use(config);
 
 app.use(expressWinston.errorLogger({
     transports: [
@@ -50,5 +55,13 @@ app.use(expressWinston.errorLogger({
         winston.format.json()
     )
 }));
+
+// Fetch json config
+penhas_api.fetch_config_json().then(async (res) => {
+    console.info('Buscando json de config');
+    await redis.set('json_config', JSON.stringify(res.data));
+}).catch(async (err) => {
+    console.error('erro ao buscar json de configuração: ' + err)
+});
 
 module.exports = app;

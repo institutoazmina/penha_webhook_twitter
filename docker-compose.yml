@@ -1,0 +1,60 @@
+version: "3"
+networks:
+    analytics:
+    redis:
+services:
+    webhook_server:
+        build: .
+        container_name: azmina-chatbot-webhook
+        environment:
+            TWITTER_CONSUMER_SECRET: ${TWITTER_CONSUMER_SECRET}
+            TWITTER_CONSUMER_KEY: ${TWITTER_CONSUMER_KEY}
+            TWITTER_ACCESS_TOKEN: ${TWITTER_ACCESS_TOKEN}
+            TWITTER_ACCESS_TOKEN_SECRET: ${TWITTER_ACCESS_TOKEN_SECRET}
+        
+            REDIS_HOST: ${REDIS_HOST}
+            REDIS_PORT: ${REDIS_PORT}
+            REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+            ANALYTICS_API_URL: ${ANALYTICS_API_URL}
+            ANALYTICS_API_TOKEN: ${ANALYTICS_API_TOKEN}
+
+            PENHAS_API_URL: ${PENHAS_API_URL}
+            PENHAS_API_TOKEN: ${PENHAS_API_TOKEN}
+        ports:
+            - ${LAN_IP}:${EXPOSED_PORT}:${PORT}
+        volumes:
+            - ./log/:/home/node/app/log/
+        networks:
+            - analytics
+            - redis
+
+    redis:
+        image: redis@sha256:442fbfdeccf203c277827cfd8e7e727ce411611e1a6caeda9cca8115ed17b9cc
+        container_name: azmina-chatbot-redis
+        networks:
+            - redis
+        
+
+#   analytics_server:
+#     build: ./directus
+#     container_name: pegabot-directus
+#     ports:
+#       - "${DIRECTUS_PORT}:80"
+#     environment:
+#       DIRECTUS_ENV: "production"
+
+#       DIRECTUS_AUTH_PUBLICKEY: "directus-dev"
+#       DIRECTUS_AUTH_SECRETKEY: "directus-dev-foo"
+
+#       DIRECTUS_DATABASE_HOST: "pegabot-mysql"
+#       DIRECTUS_DATABASE_PORT: "3306"
+#       DIRECTUS_DATABASE_NAME: "pegabot_admin_dev"
+#       DIRECTUS_DATABASE_USERNAME: "pegabot_admin"
+#       DIRECTUS_DATABASE_PASSWORD: "pegabot_admin"
+#     volumes:
+#       - ./data/config:/var/directus/config
+#       - ./data/uploads:/var/directus/public/uploads
+#     networks:
+#       - database
+
