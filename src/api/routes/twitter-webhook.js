@@ -211,7 +211,9 @@ router.post('/twitter-webhook', async (req, res) => {
                                 timeout += 1000;
                             });
 
-
+                        }
+                        else {
+                            await twitter_api.send_dm(twitter_user_id, 'Texto de "não entendi"');
                         }
                     }
 
