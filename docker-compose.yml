@@ -7,11 +7,12 @@ services:
         build: .
         container_name: azmina-chatbot-webhook
         environment:
+            PORT: ${PORT}
             TWITTER_CONSUMER_SECRET: ${TWITTER_CONSUMER_SECRET}
             TWITTER_CONSUMER_KEY: ${TWITTER_CONSUMER_KEY}
             TWITTER_ACCESS_TOKEN: ${TWITTER_ACCESS_TOKEN}
             TWITTER_ACCESS_TOKEN_SECRET: ${TWITTER_ACCESS_TOKEN_SECRET}
-        
+
             REDIS_HOST: ${REDIS_HOST}
             REDIS_PORT: ${REDIS_PORT}
             REDIS_PASSWORD: ${REDIS_PASSWORD}
