@@ -8,34 +8,46 @@ const client = new Twitter({
     access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 });
 
-async function send_dm(twitter_user_id, text, options) {
-    let message_data;
+function get_message_data(text, options) {
     if (options) {
-        message_data = {
+        return {
             text: text,
 
             quick_reply: {
                 type: 'options',
                 options: options
             }
-        }
+        };
     }
     else {
-        message_data = {
-            text: text
-        }
+        return { text: text }
+    }
+}
+
+async function send_dm(twitter_user_id, text, options) {
+    const message_data = get_message_data(text, options);
+
+    try {
+        const direct_message = await client.post("direct_messages/events/new", {
+            event: {
+                type: "message_create",
+
+                message_create: {
+                    target: { recipient_id: twitter_user_id },
+                    message_data: message_data
+                }
+            }
+        });
+
+        return direct_message;
+    }
+    catch (err) {
+        console.error('Erro ao enviar DM');
+        console.error(err);
+
+        return err;
     }
 
-    return await client.post("direct_messages/events/new", {
-        event: {
-            type: "message_create",
-
-            message_create: {
-                target: { recipient_id: twitter_user_id },
-                message_data: message_data
-            }
-        }
-    });
 }
 
 module.exports = {
