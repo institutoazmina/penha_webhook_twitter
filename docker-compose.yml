@@ -25,7 +25,7 @@ services:
         ports:
             - ${LAN_IP}:${EXPOSED_PORT}:${PORT}
         volumes:
-            - ./log/:/home/node/app/log/
+            - ${HOST_MACHINE_LOG_DIR}:${LOG_DIR}
         networks:
             - analytics
             - redis

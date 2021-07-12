@@ -23,7 +23,7 @@ const transport = new winston.transports.DailyRotateFile({
     zippedArchive: true,
     maxSize: '20m',
     maxFiles: '14d',
-    dirname: process.env.LOG_DIR || "/tmp/"
+    dirname: process.env.LOG_DIR || "/tmp/azmina-chatbot-log/"
 });
 
 app.use(expressWinston.logger({
