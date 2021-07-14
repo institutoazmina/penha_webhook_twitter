@@ -90,9 +90,6 @@ router.post('/twitter-webhook', async (req, res) => {
                             }
                         }
                     } else {
-                        const chosen_opt = quick_reply.substring(8);
-                        console.log('chosen_opt: ' + chosen_opt)
-
                         const metadata = JSON.parse(quick_reply);
 
                         if (metadata.is_questionnaire) {
@@ -142,7 +139,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         }
 
                                         if (msg.code) {
-                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_node, stash.first_msg_tz, 1);
+                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1);
                                             analytics_id = analytics_post.data.id;
 
                                             stash.last_analytics_id = analytics_id;
