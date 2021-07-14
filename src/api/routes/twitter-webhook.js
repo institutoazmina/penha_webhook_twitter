@@ -147,7 +147,12 @@ router.post('/twitter-webhook', async (req, res) => {
                                         }
 
                                         if (msg.code) {
-                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, undefined, stash.current_questionnaire_id);
+                                            let finished;
+                                            if (msg.code.substring(0, 3) === 'FIM') {
+                                                finished = 'QUESTIONNAIRE_FINISHED'
+                                            }
+
+                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, finished, stash.current_questionnaire_id);
                                             analytics_id = analytics_post.data.id;
 
                                             stash.last_analytics_id = analytics_id;
@@ -167,6 +172,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                         }
                         else if (metadata.is_restart) {
+                            await analytics_api.post_analytics(stash.conversa_id, stash.current_node, stash.current_node, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_RETRY');
                             await stasher.delete_stash(twitter_user_id);
                             await twitter_api.send_dm(twitter_user_id, 'Fluxo reiniciado, na próxima mensagem você irá receber a mensagem inicial.')
                         }
