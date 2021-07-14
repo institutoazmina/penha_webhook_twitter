@@ -256,8 +256,36 @@ router.post('/twitter-webhook', async (req, res) => {
                     const sent_msg = untreated_msg.toLowerCase();
 
                     if (sent_msg === 'reiniciar') {
+                        await analytics_api.post_analytics(stash.conversa_id, stash.current_node, stash.current_node, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_GAVE_UP');
                         await stasher.delete_stash(twitter_user_id);
-                        await twitter_api.send_dm(twitter_user_id, "Certo, vou deletar minha memória sobre você, na próxima mensagem irei te responder com a primeira mensagem do fluxo.");
+
+                        const node = flow.nodes[0];
+                        const stash = {
+                            current_node: flow.nodes[0].code,
+                            started_at: Date.now(),
+                            first_msg_epoch: Number(dm.created_timestamp),
+                            first_msg_tz: msg_tz,
+                        }
+
+                        // Iniciando conversa na API de analytics
+                        const conversa = await analytics_api.post_conversa(remote_id, msg_tz);
+                        const conversa_id = conversa.data.id;
+                        stash.conversa_id = conversa_id;
+
+                        // Fazendo post de analytics
+                        const analytics_post = await analytics_api.post_analytics(conversa_id, stash.current_node, undefined, stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
+                        const analytics_id = analytics_post.data.id;
+                        stash.last_analytics_id = analytics_id;
+
+                        // Verificando por mensagens
+                        const messages = node.messages;
+                        if (messages) {
+                            const text = messages.join('\n');
+                            await twitter_api.send_dm(twitter_user_id, text, node.quick_replies);
+                        }
+
+                        await stasher.save_stash(twitter_user_id, stash);
+
                     }
                     else {
                         if (stash.is_questionnaire && stash.current_questionnaire_question_type === 'text') {
