@@ -9,6 +9,7 @@ const stasher = require('../stash');
 const redis = require('../../storage/redis');
 const twitter_api = require('../../webservices/twitter');
 const penhas_api = require('../../webservices/penhas');
+const analytics_api = require('../../webservices/analytics');
 
 // const flow = require('./../../data/flow.nodes.json');
 const { time } = require('console');
@@ -39,6 +40,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
     if (direct_messages) {
         direct_messages.forEach(async dm => {
+            const msg_tz = new Date(Number(dm.created_timestamp));
             const twitter_user_id = dm.message_create.sender_id;
             const remote_id = crypto.createHmac('sha256', twitter_user_id).digest('hex');
 
@@ -72,11 +74,16 @@ router.post('/twitter-webhook', async (req, res) => {
                                     return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: questionnaire_data.quiz_session.session_id, is_questionnaire: true }) }
                                 }));
 
+                                const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_message.code, stash.current_node, stash.first_msg_tz, 1);
+                                const analytics_id = analytics_post.data.id;
+
+                                stash.last_analytics_id = analytics_id;
                                 stash.current_node = next_node.code;
                                 stash.is_questionnaire = true;
                                 stash.current_questionnaire_question = next_message.code;
                                 stash.current_questionnaire_question_type = next_message.type;
                                 stash.current_questionnaire_question_ref = next_message.ref;
+                                stash.current_questionnaire_options = next_message.options;
                                 stash.session_id = questionnaire_data.quiz_session.session_id;
 
                                 await stasher.save_stash(twitter_user_id, stash);
@@ -130,6 +137,19 @@ router.post('/twitter-webhook', async (req, res) => {
                                             stash.current_questionnaire_question = msg.code;
                                             stash.current_questionnaire_question_type = msg.type;
                                             stash.current_questionnaire_question_ref = msg.ref;
+
+                                            await stasher.save_stash(twitter_user_id, stash);
+                                        }
+
+                                        if (msg.code) {
+                                            const analytics_post = await analytics_api.post_analytics(conversa_id, msg.code, stash.current_node, stash.first_msg_tz, 1);
+                                            analytics_id = analytics_post.data.id;
+
+                                            stash.last_analytics_id = analytics_id;
+                                            stash.current_questionnaire_question = msg.code;
+                                            stash.current_questionnaire_question_type = msg.type;
+                                            stash.current_questionnaire_question_ref = msg.ref;
+                                            stash.current_questionnaire_options = msg.options;
 
                                             await stasher.save_stash(twitter_user_id, stash);
                                         }
@@ -220,10 +240,22 @@ router.post('/twitter-webhook', async (req, res) => {
             else {
                 // Começando coversa
                 const node = flow.nodes[0];
-                const step = {
+                const stash = {
                     current_node: flow.nodes[0].code,
-                    started_at: Date.now()
+                    started_at: Date.now(),
+                    first_msg_epoch: Number(dm.created_timestamp),
+                    first_msg_tz: msg_tz,
                 }
+
+                // Iniciando conversa na API de analytics
+                const conversa = await analytics_api.post_conversa(remote_id, msg_tz);
+                const conversa_id = conversa.data.id;
+                stash.conversa_id = conversa_id;
+
+                // Fazendo post de analytics
+                const analytics_post = await analytics_api.post_analytics(conversa_id, stash.current_node, undefined, stash.first_msg_tz, 1);
+                const analytics_id = analytics_post.data.id;
+                stash.last_analytics_id = analytics_id;
 
                 // Verificando por mensagens
                 const messages = node.messages;
@@ -232,7 +264,7 @@ router.post('/twitter-webhook', async (req, res) => {
                     await twitter_api.send_dm(twitter_user_id, text, node.quick_replies);
                 }
 
-                await stasher.save_stash(twitter_user_id, step);
+                await stasher.save_stash(twitter_user_id, stash);
             }
 
 
