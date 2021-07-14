@@ -25,7 +25,7 @@ async function post_conversa(handle_hashed, first_msg_tz) {
     return 1;
 }
 
-async function post_analytics(conversa_id, step_code, last_step_code, first_msg_tz, json_version_code, tag_code, finished) {
+async function post_analytics(conversa_id, step_code, last_step_code, first_msg_tz, json_version_code, tag_code, finished, questionnaire_id) {
     const req_url = `${api_url}/analytics`;
 
     let tries = 0;
@@ -38,6 +38,7 @@ async function post_analytics(conversa_id, step_code, last_step_code, first_msg_
                 first_msg_tz: first_msg_tz,
                 json_version_code: json_version_code,
                 tag_code: tag_code,
+                questionnaire_id: questionnaire_id,
                 finished: finished
             });
 

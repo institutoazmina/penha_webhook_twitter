@@ -84,6 +84,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                 stash.current_questionnaire_question_type = next_message.type;
                                 stash.current_questionnaire_question_ref = next_message.ref;
                                 stash.current_questionnaire_options = next_message.options;
+                                stash.current_questionnaire_id = next_node.questionnaire_id;
                                 stash.session_id = questionnaire_data.quiz_session.session_id;
 
                                 await stasher.save_stash(twitter_user_id, stash);
@@ -139,7 +140,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         }
 
                                         if (msg.code) {
-                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1);
+                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, undefined, stash.current_questionnaire_id);
                                             analytics_id = analytics_post.data.id;
 
                                             stash.last_analytics_id = analytics_id;
