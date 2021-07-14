@@ -187,7 +187,7 @@ router.post('/twitter-webhook', async (req, res) => {
                             await twitter_api.send_dm(twitter_user_id, 'Fluxo reiniciado, na próxima mensagem você irá receber a mensagem inicial.')
                         }
                         else if (metadata.is_questionnaire_end) {
-                            await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_FINISHED', stash.current_questionnaire_id);
+                            await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_FINISHED', stash.current_questionnaire_id);
 
                             const node = flow.nodes[0];
                             const new_stash = {
@@ -217,7 +217,7 @@ router.post('/twitter-webhook', async (req, res) => {
                             await stasher.save_stash(twitter_user_id, new_stash);
                         }
                         else if (metadata.is_questionnaire_reset) {
-                            await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_RESET', stash.current_questionnaire_id);
+                            await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_RESET', stash.current_questionnaire_id);
 
                             const node = flow.nodes[0];
                             const new_stash = {
