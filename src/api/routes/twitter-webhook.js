@@ -19,6 +19,10 @@ function get_challenge_response(crc_token, consumer_secret) {
     return crypto.createHmac('sha256', consumer_secret).update(crc_token).digest('base64');
 };
 
+async function start_again() {
+
+}
+
 router.get('/twitter-webhook', (req, res) => {
     const { crc_token } = req.query;
 
@@ -62,7 +66,7 @@ router.post('/twitter-webhook', async (req, res) => {
                         });
                         next_node = next_node[0];
 
-                        const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_node.code, stash.current_node, stash.first_msg_tz, 1);
+                        const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_node.code, stash.current_node, stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
                         const analytics_id = analytics_post.data.id;
 
                         stash.current_node = next_node.code;
@@ -129,10 +133,19 @@ router.post('/twitter-webhook', async (req, res) => {
                                         }
                                         else if (msg.type === 'button') {
                                             const content = msg.content.length > 1 ? msg.content : 'Texto de finalização do questionário';
+
+                                            let payload;
+                                            if (msg.code.substring(0, 3) === 'FIM') {
+                                                payload = JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
+                                            }
+                                            else {
+                                                payload = JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_reset: true })
+                                            }
+
                                             await twitter_api.send_dm(twitter_user_id, content, [
                                                 {
                                                     label: msg.label,
-                                                    metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_restart: true })
+                                                    metadata: payload
                                                 }
                                             ]);
                                         }
@@ -147,12 +160,9 @@ router.post('/twitter-webhook', async (req, res) => {
                                         }
 
                                         if (msg.code) {
-                                            let finished;
-                                            if (msg.code.substring(0, 3) === 'FIM') {
-                                                finished = 'QUESTIONNAIRE_FINISHED'
-                                            }
 
-                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, finished, stash.current_questionnaire_id);
+
+                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
                                             analytics_id = analytics_post.data.id;
 
                                             stash.last_analytics_id = analytics_id;
@@ -172,9 +182,69 @@ router.post('/twitter-webhook', async (req, res) => {
 
                         }
                         else if (metadata.is_restart) {
-                            await analytics_api.post_analytics(stash.conversa_id, stash.current_node, stash.current_node, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_RETRY');
+                            await analytics_api.post_analytics(stash.conversa_id, stash.current_node, stash.current_node, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_GAVE_UP');
                             await stasher.delete_stash(twitter_user_id);
                             await twitter_api.send_dm(twitter_user_id, 'Fluxo reiniciado, na próxima mensagem você irá receber a mensagem inicial.')
+                        }
+                        else if (metadata.is_questionnaire_end) {
+                            await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_FINISHED', stash.current_questionnaire_id);
+
+                            const node = flow.nodes[0];
+                            const stash = {
+                                current_node: flow.nodes[0].code,
+                                started_at: Date.now(),
+                                first_msg_epoch: Number(dm.created_timestamp),
+                                first_msg_tz: msg_tz,
+                            }
+
+                            // Iniciando conversa na API de analytics
+                            const conversa = await analytics_api.post_conversa(remote_id, msg_tz);
+                            const conversa_id = conversa.data.id;
+                            stash.conversa_id = conversa_id;
+
+                            // Fazendo post de analytics
+                            const analytics_post = await analytics_api.post_analytics(conversa_id, stash.current_node, undefined, stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
+                            const analytics_id = analytics_post.data.id;
+                            stash.last_analytics_id = analytics_id;
+
+                            // Verificando por mensagens
+                            const messages = node.messages;
+                            if (messages) {
+                                const text = messages.join('\n');
+                                await twitter_api.send_dm(twitter_user_id, text, node.quick_replies);
+                            }
+
+                            await stasher.save_stash(twitter_user_id, stash);
+                        }
+                        else if (metadata.is_questionnaire_reset) {
+                            await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_RESET', stash.current_questionnaire_id);
+
+                            const node = flow.nodes[0];
+                            const stash = {
+                                current_node: flow.nodes[0].code,
+                                started_at: Date.now(),
+                                first_msg_epoch: Number(dm.created_timestamp),
+                                first_msg_tz: msg_tz,
+                            }
+
+                            // Iniciando conversa na API de analytics
+                            const conversa = await analytics_api.post_conversa(remote_id, msg_tz);
+                            const conversa_id = conversa.data.id;
+                            stash.conversa_id = conversa_id;
+
+                            // Fazendo post de analytics
+                            const analytics_post = await analytics_api.post_analytics(conversa_id, stash.current_node, undefined, stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
+                            const analytics_id = analytics_post.data.id;
+                            stash.last_analytics_id = analytics_id;
+
+                            // Verificando por mensagens
+                            const messages = node.messages;
+                            if (messages) {
+                                const text = messages.join('\n');
+                                await twitter_api.send_dm(twitter_user_id, text, node.quick_replies);
+                            }
+
+                            await stasher.save_stash(twitter_user_id, stash);
                         }
 
 
@@ -222,7 +292,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                             await twitter_api.send_dm(twitter_user_id, content, [
                                                 {
                                                     label: msg.label,
-                                                    metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_restart: true })
+                                                    metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
                                                 }
                                             ]);
                                         }
@@ -264,7 +334,7 @@ router.post('/twitter-webhook', async (req, res) => {
                 stash.conversa_id = conversa_id;
 
                 // Fazendo post de analytics
-                const analytics_post = await analytics_api.post_analytics(conversa_id, stash.current_node, undefined, stash.first_msg_tz, 1);
+                const analytics_post = await analytics_api.post_analytics(conversa_id, stash.current_node, undefined, stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
                 const analytics_id = analytics_post.data.id;
                 stash.last_analytics_id = analytics_id;
 
@@ -284,5 +354,6 @@ router.post('/twitter-webhook', async (req, res) => {
 
     return res.json({ message: 'ok' });
 });
+
 
 module.exports = router;
