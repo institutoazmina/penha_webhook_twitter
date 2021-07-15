@@ -84,7 +84,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                     return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: questionnaire_data.quiz_session.session_id, is_questionnaire: true }) }
                                 }));
 
-                                const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_message.code, stash.current_node, stash.first_msg_tz, 1, undefined, undefined, next_node.questionnaire_id);
+                                const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_message.code, stash.current_node, stash.first_msg_tz, 1, undefined, 'DURING_QUESTIONNAIRE', next_node.questionnaire_id);
                                 const analytics_id = analytics_post.data.id;
 
                                 stash.last_analytics_id = analytics_id;
