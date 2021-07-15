@@ -11,7 +11,6 @@ const twitter_api = require('../../webservices/twitter');
 const penhas_api = require('../../webservices/penhas');
 const analytics_api = require('../../webservices/analytics');
 
-// const flow = require('./../../data/flow.nodes.json');
 const { time } = require('console');
 
 
@@ -289,7 +288,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                     }
                     else {
-                        if (stash.is_questionnaire && stash.current_questionnaire_question_type === 'text') {
+                        if (stash.current_questionnaire_question_type === 'text') {
                             let timeout = 0;
 
                             const answer = await penhas_api.post_answer(stash.session_id, stash.current_questionnaire_question_ref, sent_msg);
@@ -334,6 +333,21 @@ router.post('/twitter-webhook', async (req, res) => {
 
                                             await stasher.save_stash(twitter_user_id, stash);
                                         }
+
+                                        if (msg.code) {
+
+
+                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
+                                            analytics_id = analytics_post.data.id;
+
+                                            stash.last_analytics_id = analytics_id;
+                                            stash.current_questionnaire_question = msg.code;
+                                            stash.current_questionnaire_question_type = msg.type;
+                                            stash.current_questionnaire_question_ref = msg.ref;
+                                            stash.current_questionnaire_options = msg.options;
+
+                                            await stasher.save_stash(twitter_user_id, stash);
+                                        }
                                     },
                                     timeout
                                 );
@@ -341,6 +355,11 @@ router.post('/twitter-webhook', async (req, res) => {
                                 timeout += 1000;
                             });
 
+                        }
+                        else {
+                            await twitter_api.send_dm(twitter_user_id, flow.error_msg, stash.current_questionnaire_options.map((opt) => {
+                                return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: msg.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
+                            }))
                         }
 
                     }
