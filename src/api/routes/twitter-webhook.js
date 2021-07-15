@@ -122,11 +122,15 @@ router.post('/twitter-webhook', async (req, res) => {
 
                             const answer = await penhas_api.post_answer(metadata.session_id, metadata.question_ref, metadata.index);
 
+                            const messages_len = answer.data.quiz_session.current_msgs.length();
+                            let current_message_index = 0;
                             answer.data.quiz_session.current_msgs.forEach(async msg => {
                                 setTimeout(
                                     async () => {
+                                        current_message_index++;
+
                                         if (msg.type === 'yesno') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content, [
+                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content, [
                                                 {
                                                     label: 'Sim',
                                                     metadata: JSON.stringify({ question_ref: msg.ref, index: 'Y', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
@@ -137,15 +141,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 }
                                             ]);
                                         } else if (msg.type === 'onlychoice') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content, msg.options.map((opt) => {
+                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content, msg.options.map((opt) => {
                                                 return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: msg.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
                                             }));
                                         }
                                         else if (msg.type === 'displaytext') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content)
+                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content)
                                         }
                                         else if (msg.type === 'button') {
-                                            const content = msg.content.length > 1 ? msg.content : 'Texto de finalização do questionário';
+                                            const content = msg.content.length > 1 ? `${current_message_index}/${messages_len} ` + msg.content : 'Texto de finalização do questionário';
 
                                             let payload;
                                             if (msg.code.substring(0, 3) === 'FIM') {
@@ -163,7 +167,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                             ]);
                                         }
                                         else if (msg.type === 'text') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content);
+                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content);
 
                                             stash.current_questionnaire_question = msg.code;
                                             stash.current_questionnaire_question_type = msg.type;
@@ -190,7 +194,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                     timeout
                                 );
 
-                                timeout += 1000;
+                                timeout += 2000;
                             });
 
                         }
@@ -309,11 +313,15 @@ router.post('/twitter-webhook', async (req, res) => {
 
                             const answer = await penhas_api.post_answer(stash.session_id, stash.current_questionnaire_question_ref, sent_msg);
 
+                            const messages_len = answer.data.quiz_session.current_msgs.length();
+                            let current_message_index = 0;
                             answer.data.quiz_session.current_msgs.forEach(async msg => {
                                 setTimeout(
                                     async () => {
+                                        current_message_index++;
+
                                         if (msg.type === 'yesno') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content, [
+                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content, [
                                                 {
                                                     label: 'Sim',
                                                     metadata: JSON.stringify({ question_ref: msg.ref, index: 'Y', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
@@ -324,15 +332,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 }
                                             ]);
                                         } else if (msg.type === 'onlychoice') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content, msg.options.map((opt) => {
+                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content, msg.options.map((opt) => {
                                                 return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: msg.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
                                             }));
                                         }
                                         else if (msg.type === 'displaytext') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content)
+                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content)
                                         }
                                         else if (msg.type === 'button') {
-                                            const content = msg.content.length > 1 ? msg.content : 'Texto de finalização do questionário';
+                                            const content = msg.content.length > 1 ? `${current_message_index}/${messages_len} ` + msg.content : 'Texto de finalização do questionário';
                                             await twitter_api.send_dm(twitter_user_id, content, [
                                                 {
                                                     label: msg.label,
@@ -341,7 +349,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                             ]);
                                         }
                                         else if (msg.type === 'text') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content);
+                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content);
 
                                             stash.current_questionnaire_question = msg.code;
                                             stash.current_questionnaire_question_type = msg.type;
@@ -368,7 +376,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                     timeout
                                 );
 
-                                timeout += 1000;
+                                timeout += 2000;
                             });
 
                         }
