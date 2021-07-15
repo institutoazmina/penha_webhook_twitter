@@ -279,6 +279,7 @@ router.post('/twitter-webhook', async (req, res) => {
                             started_at: Date.now(),
                             first_msg_epoch: Number(dm.created_timestamp),
                             first_msg_tz: msg_tz,
+                            current_questionnaire_options: node.quick_replies
                         }
 
                         // Iniciando conversa na API de analytics
@@ -372,14 +373,12 @@ router.post('/twitter-webhook', async (req, res) => {
                         }
                         else {
                             console.log(stash);
-                            console.log(sent_msg);
                             if (stash.is_questionnaire) {
                                 await twitter_api.send_dm(twitter_user_id, flow.error_msg, stash.current_questionnaire_options.map((opt) => {
                                     return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: msg.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
                                 }))
                             }
                             else {
-                                console.log('ta aqui');
 
                                 await twitter_api.send_dm(twitter_user_id, flow.error_msg, stash.current_questionnaire_options)
                             }
@@ -399,9 +398,7 @@ router.post('/twitter-webhook', async (req, res) => {
                     first_msg_tz: msg_tz,
                     current_questionnaire_options: node.quick_replies
                 }
-                console.log('qrs do primeiro node: ');
-                console.log(node.quick_replies);
-                stash.current_questionnaire_options = node.quick_replies;
+
                 // Iniciando conversa na API de analytics
                 const conversa = await analytics_api.post_conversa(remote_id, msg_tz);
                 const conversa_id = conversa.data.id;
