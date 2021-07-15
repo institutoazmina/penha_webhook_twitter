@@ -399,7 +399,9 @@ router.post('/twitter-webhook', async (req, res) => {
                     first_msg_tz: msg_tz,
                     current_questionnaire_options: node.quick_replies
                 }
-
+                console.log('qrs do primeiro node: ');
+                console.log(node.quick_replies);
+                stash.current_questionnaire_options = node.quick_replies;
                 // Iniciando conversa na API de analytics
                 const conversa = await analytics_api.post_conversa(remote_id, msg_tz);
                 const conversa_id = conversa.data.id;
