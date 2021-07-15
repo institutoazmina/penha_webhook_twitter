@@ -394,6 +394,7 @@ router.post('/twitter-webhook', async (req, res) => {
                     started_at: Date.now(),
                     first_msg_epoch: Number(dm.created_timestamp),
                     first_msg_tz: msg_tz,
+                    current_questionnaire_options: node.quick_replies
                 }
 
                 // Iniciando conversa na API de analytics
