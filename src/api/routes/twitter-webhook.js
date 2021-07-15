@@ -43,9 +43,10 @@ router.post('/twitter-webhook', async (req, res) => {
 
     if (direct_messages) {
         direct_messages.forEach(async dm => {
-            console.log('==============\n')
-            console.log(dm);
-            console.log('==============\n')
+            if (dm.message_create.source_app_id) {
+                return 1;
+            }
+
             const msg_tz = new Date(Number(dm.created_timestamp));
             const twitter_user_id = dm.message_create.sender_id;
             const remote_id = crypto.createHmac('sha256', twitter_user_id).digest('hex');
@@ -378,6 +379,8 @@ router.post('/twitter-webhook', async (req, res) => {
                                 }))
                             }
                             else {
+                                console.log('ta aqui');
+
                                 await twitter_api.send_dm(twitter_user_id, flow.error_msg, stash.current_questionnaire_options)
                             }
                         }
