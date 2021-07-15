@@ -375,7 +375,7 @@ router.post('/twitter-webhook', async (req, res) => {
                             console.log(stash);
                             if (stash.is_questionnaire) {
                                 await twitter_api.send_dm(twitter_user_id, flow.error_msg, stash.current_questionnaire_options.map((opt) => {
-                                    return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: stash.current_questionnaire_question_ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
+                                    return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: stash.current_questionnaire_question_ref, index: opt.index, session_id: stash.session_id, is_questionnaire: true }) }
                                 }))
                             }
                             else {
