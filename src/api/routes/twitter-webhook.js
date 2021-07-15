@@ -43,6 +43,9 @@ router.post('/twitter-webhook', async (req, res) => {
 
     if (direct_messages) {
         direct_messages.forEach(async dm => {
+            console.log('==============\n')
+            console.log(dm);
+            console.log('==============\n')
             const msg_tz = new Date(Number(dm.created_timestamp));
             const twitter_user_id = dm.message_create.sender_id;
             const remote_id = crypto.createHmac('sha256', twitter_user_id).digest('hex');
@@ -98,6 +101,16 @@ router.post('/twitter-webhook', async (req, res) => {
                                 stash.session_id = questionnaire_data.quiz_session.session_id;
 
                                 await stasher.save_stash(twitter_user_id, stash);
+                            }
+                        }
+                        else {
+                            stash.current_node = next_node.code;
+                            stash.current_questionnaire_options = next_node.quick_replies;
+                            await stasher.save_stash(twitter_user_id, stash);
+
+                            if (next_node.messages) {
+                                const text = messages.join('\n');
+                                await twitter_api.send_dm(twitter_user_id, text, next_node.quick_replies);
                             }
                         }
                     } else {
@@ -359,9 +372,14 @@ router.post('/twitter-webhook', async (req, res) => {
                         else {
                             console.log(stash);
                             console.log(sent_msg);
-                            await twitter_api.send_dm(twitter_user_id, flow.error_msg, stash.current_questionnaire_options.map((opt) => {
-                                return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: msg.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
-                            }))
+                            if (stash.is_questionnaire) {
+                                await twitter_api.send_dm(twitter_user_id, flow.error_msg, stash.current_questionnaire_options.map((opt) => {
+                                    return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: msg.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
+                                }))
+                            }
+                            else {
+                                await twitter_api.send_dm(twitter_user_id, flow.error_msg, stash.current_questionnaire_options)
+                            }
                         }
 
                     }
