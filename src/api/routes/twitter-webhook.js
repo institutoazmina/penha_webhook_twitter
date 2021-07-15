@@ -122,7 +122,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                             const answer = await penhas_api.post_answer(metadata.session_id, metadata.question_ref, metadata.index);
 
-                            const messages_len = answer.data.quiz_session.current_msgs.length();
+                            const messages_len = answer.data.quiz_session.current_msgs.length;
                             let current_message_index = 0;
                             answer.data.quiz_session.current_msgs.forEach(async msg => {
                                 setTimeout(
@@ -313,7 +313,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                             const answer = await penhas_api.post_answer(stash.session_id, stash.current_questionnaire_question_ref, sent_msg);
 
-                            const messages_len = answer.data.quiz_session.current_msgs.length();
+                            const messages_len = answer.data.quiz_session.current_msgs.length;
                             let current_message_index = 0;
                             answer.data.quiz_session.current_msgs.forEach(async msg => {
                                 setTimeout(
