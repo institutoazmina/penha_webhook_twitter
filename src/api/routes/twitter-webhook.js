@@ -21,10 +21,9 @@ function get_challenge_response(crc_token, consumer_secret) {
 async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
     let stash = await stasher.get_stash(twitter_user_id);
     stash = JSON.parse(stash);
-    console.log(stash);
+
     if (stash && stash.tag_code) {
-        console.log('achou na stash');
-        console.log(stash.tag_code);
+
         return stash.tag_code
     }
     else {
@@ -32,18 +31,18 @@ async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
 
         tag_code_config.scenarios.forEach(async scenario => {
 
-            console.log(scenario);
             if (scenario.check_code === msg_code) {
-                console.log('ta no if');
                 tag_code_value = scenario.tag_code_value;
 
-                stash.tag_code = scenario.tag_code_value;
-                await stasher.save_stash(twitter_user_id, stash);
+                console.log('salvando tag code na stash');
+                console.log('stash a ser salva: ');
+                stash.tag_code = tag_code_value;
+                console.log(stash);
             }
         })
 
-        console.log('ta no else');
-        console.log(tag_code_value);
+
+        await stasher.save_stash(twitter_user_id, stash);
 
         return tag_code_value || 0;
     }
