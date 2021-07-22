@@ -86,7 +86,7 @@ router.post('/twitter-webhook', async (req, res) => {
                         });
                         next_node = next_node[0];
 
-                        const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_node.code, stash.current_node, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config, twitter_user_id), 'DURING_DECISION_TREE');
+                        const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_node.code, stash.current_node, stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
                         const analytics_id = analytics_post.data.id;
 
                         stash.current_node = next_node.code;
