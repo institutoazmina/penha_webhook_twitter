@@ -23,6 +23,8 @@ async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
     stash = JSON.parse(stash);
 
     if (stash && stash.tag_code) {
+        console.log('achou na stash');
+        console.log(stash.tag_code);
         return stash.tag_code
     }
     else {
@@ -30,7 +32,9 @@ async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
 
         tag_code_config.scenarios.forEach(async scenario => {
 
+            console.log(scenario);
             if (scenario.check_code === msg_code) {
+                console.log('ta no if');
                 tag_code_value = scenario.tag_code_value;
 
                 stash.tag_code = scenario.tag_code_value;
@@ -38,7 +42,10 @@ async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
             }
         })
 
-        return tag_code_value;
+        console.log('ta no else');
+        console.log(tag_code_value);
+
+        return tag_code_value || 0;
     }
 }
 
