@@ -26,7 +26,7 @@ async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
         return stash.tag_code
     }
     else {
-        let tag_code_value = tag_code_config.default;
+        let tag_code_value = 0;
 
         tag_code_config.scenarios.forEach(async scenario => {
 
