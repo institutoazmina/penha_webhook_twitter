@@ -18,17 +18,25 @@ function get_challenge_response(crc_token, consumer_secret) {
     return crypto.createHmac('sha256', consumer_secret).update(crc_token).digest('base64');
 };
 
-async function get_tag_code(msg_code, tag_code_config) {
-    let tag_code_value = tag_code_config.default;
+async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
+    let stash = await stasher.get_stash(twitter_user_id);
+    stash = JSON.parse(stash);
 
-    tag_code_config.scenarios.forEach(scenario => {
+    if (stash && stash.tag_code) {
+        return stash.tag_code
+    }
+    else {
+        let tag_code_value = tag_code_config.default;
 
-        if (scenario.check_code === msg_code) {
-            tag_code_value = scenario.tag_code_value;
-        }
-    })
+        tag_code_config.scenarios.forEach(scenario => {
 
-    return tag_code_value;
+            if (scenario.check_code === msg_code) {
+                tag_code_value = scenario.tag_code_value;
+            }
+        })
+
+        return tag_code_value;
+    }
 }
 
 router.get('/twitter-webhook', (req, res) => {
@@ -78,7 +86,7 @@ router.post('/twitter-webhook', async (req, res) => {
                         });
                         next_node = next_node[0];
 
-                        const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_node.code, stash.current_node, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config), 'DURING_DECISION_TREE');
+                        const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_node.code, stash.current_node, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config, twitter_user_id), 'DURING_DECISION_TREE');
                         const analytics_id = analytics_post.data.id;
 
                         stash.current_node = next_node.code;
@@ -97,7 +105,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                     return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: questionnaire_data.quiz_session.session_id, is_questionnaire: true }) }
                                 }));
 
-                                const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_message.code, stash.current_node, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config), 'DURING_QUESTIONNAIRE', next_node.questionnaire_id);
+                                const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_message.code, stash.current_node, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', next_node.questionnaire_id);
                                 const analytics_id = analytics_post.data.id;
 
                                 stash.last_analytics_id = analytics_id;
@@ -188,7 +196,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         if (msg.code) {
 
 
-                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
+                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, get_tag_code(msg.code, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
                                             analytics_id = analytics_post.data.id;
 
                                             stash.last_analytics_id = analytics_id;
@@ -208,12 +216,14 @@ router.post('/twitter-webhook', async (req, res) => {
 
                         }
                         else if (metadata.is_restart) {
-                            await analytics_api.post_analytics(stash.conversa_id, stash.current_node, stash.current_node, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config), 'QUESTIONNAIRE_GAVE_UP');
+                            const step_code = stash.current_questionnaire_question ? stash.current_questionnaire_question : stash.current_node;
+
+                            await analytics_api.post_analytics(stash.conversa_id, step_code, step_code, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_GAVE_UP');
                             await stasher.delete_stash(twitter_user_id);
                             await twitter_api.send_dm(twitter_user_id, 'Fluxo reiniciado, na próxima mensagem você irá receber a mensagem inicial.')
                         }
                         else if (metadata.is_questionnaire_end) {
-                            await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config), 'QUESTIONNAIRE_FINISHED', stash.current_questionnaire_id);
+                            await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, get_tag_code(stash.current_questionnaire_question, flow.tag_code_config, twitter_user_id), 'QUESTIONNAIRE_FINISHED', stash.current_questionnaire_id);
 
                             const node = flow.nodes[0];
                             const new_stash = {
@@ -230,7 +240,7 @@ router.post('/twitter-webhook', async (req, res) => {
                             new_stash.conversa_id = conversa_id;
 
                             // Fazendo post de analytics
-                            const analytics_post = await analytics_api.post_analytics(conversa_id, stash.current_node, undefined, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config), 'DURING_DECISION_TREE');
+                            const analytics_post = await analytics_api.post_analytics(conversa_id, stash.current_node, undefined, stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
                             const analytics_id = analytics_post.data.id;
                             new_stash.last_analytics_id = analytics_id;
 
@@ -244,7 +254,7 @@ router.post('/twitter-webhook', async (req, res) => {
                             await stasher.save_stash(twitter_user_id, new_stash);
                         }
                         else if (metadata.is_questionnaire_reset) {
-                            await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config), 'QUESTIONNAIRE_RESET', stash.current_questionnaire_id);
+                            await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_RESET', stash.current_questionnaire_id);
 
                             const node = flow.nodes[0];
                             const new_stash = {
@@ -260,7 +270,7 @@ router.post('/twitter-webhook', async (req, res) => {
                             new_stash.conversa_id = conversa_id;
 
                             // Fazendo post de analytics
-                            const analytics_post = await analytics_api.post_analytics(conversa_id, new_stash.current_node, undefined, new_stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config), 'DURING_DECISION_TREE');
+                            const analytics_post = await analytics_api.post_analytics(conversa_id, new_stash.current_node, undefined, new_stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
                             const analytics_id = analytics_post.data.id;
                             new_stash.last_analytics_id = analytics_id;
 
@@ -284,7 +294,8 @@ router.post('/twitter-webhook', async (req, res) => {
 
                     if (sent_msg === 'reiniciar') {
                         console.log(stash);
-                        await analytics_api.post_analytics(stash.conversa_id, stash.current_node, stash.current_node, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config), 'QUESTIONNAIRE_GAVE_UP');
+                        const step_code = stash.current_questionnaire_question ? stash.current_questionnaire_question : stash.current_node;
+                        await analytics_api.post_analytics(stash.conversa_id, step_code, step_code, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_GAVE_UP');
                         await stasher.delete_stash(twitter_user_id);
 
                         const node = flow.nodes[0];
@@ -302,7 +313,7 @@ router.post('/twitter-webhook', async (req, res) => {
                         new_stash.conversa_id = conversa_id;
 
                         // Fazendo post de analytics
-                        const analytics_post = await analytics_api.post_analytics(conversa_id, new_stash.current_node, undefined, new_stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config), 'DURING_DECISION_TREE');
+                        const analytics_post = await analytics_api.post_analytics(conversa_id, new_stash.current_node, undefined, new_stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
                         const analytics_id = analytics_post.data.id;
                         new_stash.last_analytics_id = analytics_id;
 
@@ -370,7 +381,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         if (msg.code) {
 
 
-                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
+                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, get_tag_code(msg.code, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
                                             analytics_id = analytics_post.data.id;
 
                                             stash.last_analytics_id = analytics_id;
@@ -423,7 +434,7 @@ router.post('/twitter-webhook', async (req, res) => {
                 stash.conversa_id = conversa_id;
 
                 // Fazendo post de analytics
-                const analytics_post = await analytics_api.post_analytics(conversa_id, stash.current_node, undefined, stash.first_msg_tz, 1, get_tag_code(next_message.code, flow.tag_code_config), 'DURING_DECISION_TREE');
+                const analytics_post = await analytics_api.post_analytics(conversa_id, stash.current_node, undefined, stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
                 const analytics_id = analytics_post.data.id;
                 stash.last_analytics_id = analytics_id;
 
