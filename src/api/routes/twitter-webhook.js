@@ -28,7 +28,7 @@ async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
     else {
         let tag_code_value = tag_code_config.default;
 
-        tag_code_config.scenarios.forEach(scenario => {
+        tag_code_config.scenarios.forEach(async scenario => {
 
             if (scenario.check_code === msg_code) {
                 tag_code_value = scenario.tag_code_value;
