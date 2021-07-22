@@ -21,7 +21,7 @@ function get_challenge_response(crc_token, consumer_secret) {
 async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
     let stash = await stasher.get_stash(twitter_user_id);
     stash = JSON.parse(stash);
-
+    console.log(stash);
     if (stash && stash.tag_code) {
         console.log('achou na stash');
         console.log(stash.tag_code);
