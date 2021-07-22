@@ -32,6 +32,9 @@ async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
 
             if (scenario.check_code === msg_code) {
                 tag_code_value = scenario.tag_code_value;
+
+                stash.tag_code = scenario.tag_code_value;
+                await stasher.save_stash(twitter_user_id, stash);
             }
         })
 
