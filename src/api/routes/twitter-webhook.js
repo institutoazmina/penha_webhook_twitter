@@ -211,7 +211,20 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 msg_content = msg.content;
                                             }
 
-                                            await twitter_api.send_dm(twitter_user_id, msg_content)
+                                            let options;
+                                            if (msg.style === 'error') {
+                                                options = [
+                                                    {
+                                                        label: 'Sair',
+                                                        metadata: JSON.stringify({
+                                                            is_questionnaire_reset: true,
+                                                            gave_up: true
+                                                        })
+                                                    }
+                                                ]
+                                            }
+
+                                            await twitter_api.send_dm(twitter_user_id, msg_content, options)
                                         }
                                         else if (msg.type === 'button') {
                                             let msg_content;
@@ -387,31 +400,54 @@ router.post('/twitter-webhook', async (req, res) => {
                             await stasher.save_stash(twitter_user_id, new_stash);
                         }
                         else if (metadata.is_questionnaire_reset) {
-                            await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_RESET', stash.current_questionnaire_id);
 
                             const node = flow.nodes[3];
                             const new_stash = {
-                                current_node: flow.nodes[0].code,
+                                current_node: flow.nodes[3].code,
                                 started_at: Date.now(),
                                 first_msg_epoch: Number(dm.created_timestamp),
                                 first_msg_tz: msg_tz,
+                                current_questionnaire_options: node.quick_replies
                             }
+                            await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(msg.code, flow.tag_code_config, twitter_user_id), (metadata.gave_up ? 'QUESTIONNAIRE_GAVE_UP' : 'QUESTIONNAIRE_FINISHED'), node.questionnaire_id);
 
                             // Iniciando conversa na API de analytics
                             const conversa = await analytics_api.post_conversa(remote_id, msg_tz);
                             const conversa_id = conversa.data.id;
                             new_stash.conversa_id = conversa_id;
 
-                            // Fazendo post de analytics
-                            const analytics_post = await analytics_api.post_analytics(conversa_id, new_stash.current_node, undefined, new_stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
-                            const analytics_id = analytics_post.data.id;
-                            new_stash.last_analytics_id = analytics_id;
+                            const questionnaire_create = await penhas_api.post_questionnaire(twitter_user_id, node.questionnaire_id);
+                            const questionnaire_data = questionnaire_create.data;
 
-                            // Verificando por mensagens
-                            const messages = node.messages;
-                            if (messages) {
-                                const text = messages.join('\n');
-                                await twitter_api.send_dm(twitter_user_id, text, node.quick_replies);
+                            if (questionnaire_data.quiz_session.current_msgs[0]) {
+                                const next_message = questionnaire_data.quiz_session.current_msgs[0];
+
+                                await twitter_api.send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
+                                    return {
+                                        label: opt.display.substring(0, 36),
+                                        metadata: JSON.stringify({
+                                            question_ref: next_message.ref,
+                                            index: opt.index,
+                                            session_id: questionnaire_data.quiz_session.session_id,
+                                            code_value: opt.code_value,
+                                            is_questionnaire: true
+                                        })
+                                    }
+                                }));
+
+                                const analytics_post = await analytics_api.post_analytics(new_stash.conversa_id, next_message.code, new_stash.current_node, new_stash.first_msg_tz, 1, await get_tag_code(next_message.code, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', node.questionnaire_id);
+                                const analytics_id = analytics_post.data.id;
+
+                                new_stash.tag_code = await get_tag_code(node.code, flow.tag_code_config, twitter_user_id);
+                                new_stash.last_analytics_id = analytics_id;
+                                new_stash.current_node = next_message.code;
+                                new_stash.is_questionnaire = true;
+                                new_stash.current_questionnaire_question = next_message.code;
+                                new_stash.current_questionnaire_question_type = next_message.type;
+                                new_stash.current_questionnaire_question_ref = next_message.ref;
+                                new_stash.current_questionnaire_options = next_message.options;
+                                new_stash.current_questionnaire_id = node.questionnaire_id;
+                                new_stash.session_id = questionnaire_data.quiz_session.session_id;
                             }
 
                             await stasher.save_stash(twitter_user_id, new_stash);
