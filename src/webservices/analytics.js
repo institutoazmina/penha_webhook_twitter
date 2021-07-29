@@ -53,5 +53,26 @@ async function post_analytics(conversa_id, step_code, last_step_code, first_msg_
     return 1;
 }
 
+async function timeout(conversa_id) {
+    const req_url = `${api_url}/timeout`;
 
-module.exports = { post_analytics, post_conversa }
+    let tries = 0;
+    while (tries < 3) {
+        try {
+            const res = await ua.post(req_url, {
+                conversa_id: conversa_id,
+            });
+
+            return res;
+        }
+        catch {
+            console.error('Erro ao mandar post para API de Analytics');
+            tries++;
+        }
+    }
+
+    return 1;
+}
+
+
+module.exports = { post_analytics, post_conversa, timeout }

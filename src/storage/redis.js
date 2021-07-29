@@ -26,4 +26,6 @@ module.exports = {
     del: promisify(redisClient.del).bind(redisClient),
     rpush: promisify(redisClient.rpush).bind(redisClient),
     lpush: promisify(redisClient.lpush).bind(redisClient),
+    keys: promisify(redisClient.keys).bind(redisClient),
+    scan: promisify(redisClient.scan).bind(redisClient)
 };

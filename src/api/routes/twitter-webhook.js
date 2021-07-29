@@ -22,7 +22,7 @@ async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
     let stash = await stasher.get_stash(twitter_user_id);
     stash = JSON.parse(stash);
 
-    if (stash && stash.tag_code) {
+    if (stash.tag_code) {
 
         return stash.tag_code
     }
@@ -40,7 +40,6 @@ async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
                 console.log(stash);
             }
         })
-
 
         await stasher.save_stash(twitter_user_id, stash);
 
@@ -80,7 +79,9 @@ router.post('/twitter-webhook', async (req, res) => {
             let stash = await stasher.get_stash(twitter_user_id);
             stash = JSON.parse(stash);
 
-            if (stash) {
+            if (stash && !stash.last_conversa_finished_at) {
+                stash.last_msg_epoch = Date.now();
+
                 let node = flow.nodes.filter((n) => {
                     return n.code === stash.current_node;
                 });
@@ -111,7 +112,16 @@ router.post('/twitter-webhook', async (req, res) => {
                                 const next_message = questionnaire_data.quiz_session.current_msgs[0];
 
                                 await twitter_api.send_dm(twitter_user_id, next_message.content, next_message.options.map((opt) => {
-                                    return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: next_message.ref, index: opt.index, session_id: questionnaire_data.quiz_session.session_id, is_questionnaire: true }) }
+                                    return {
+                                        label: opt.display.substring(0, 36),
+                                        metadata: JSON.stringify({
+                                            question_ref: next_message.ref,
+                                            index: opt.index,
+                                            session_id: questionnaire_data.quiz_session.session_id,
+                                            code_value: opt.code_value,
+                                            is_questionnaire: true
+                                        })
+                                    }
                                 }));
 
                                 const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_message.code, stash.current_node, stash.first_msg_tz, 1, await get_tag_code(next_message.code, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', next_node.questionnaire_id);
@@ -168,7 +178,16 @@ router.post('/twitter-webhook', async (req, res) => {
                                             ]);
                                         } else if (msg.type === 'onlychoice') {
                                             await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content, msg.options.map((opt) => {
-                                                return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: msg.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
+                                                return {
+                                                    label: opt.display.substring(0, 36),
+                                                    metadata: JSON.stringify({
+                                                        question_ref: msg.ref,
+                                                        index: opt.index,
+                                                        session_id: answer.data.quiz_session.session_id,
+                                                        code_value: opt.code_value,
+                                                        is_questionnaire: true
+                                                    })
+                                                }
                                             }));
                                         }
                                         else if (msg.type === 'displaytext') {
@@ -205,7 +224,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         if (msg.code) {
 
 
-                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(msg.code, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
+                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(metada.code_value, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
                                             analytics_id = analytics_post.data.id;
 
                                             stash.last_analytics_id = analytics_id;
@@ -362,7 +381,16 @@ router.post('/twitter-webhook', async (req, res) => {
                                             ]);
                                         } else if (msg.type === 'onlychoice') {
                                             await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content, msg.options.map((opt) => {
-                                                return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: msg.ref, index: opt.index, session_id: answer.data.quiz_session.session_id, is_questionnaire: true }) }
+                                                return {
+                                                    label: opt.display.substring(0, 36),
+                                                    metadata: JSON.stringify({
+                                                        question_ref: msg.ref,
+                                                        index: opt.index,
+                                                        session_id: answer.data.quiz_session.session_id,
+                                                        code_value: opt.code_value,
+                                                        is_questionnaire: true
+                                                    })
+                                                }
                                             }));
                                         }
                                         else if (msg.type === 'displaytext') {
