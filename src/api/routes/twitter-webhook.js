@@ -239,6 +239,9 @@ router.post('/twitter-webhook', async (req, res) => {
                                             }
                                             else {
                                                 console.log('ta aqui no else');
+                                                console.log(msg.code);
+                                                console.log(msg.code.substring(0, 5));
+                                                console.log(msg.code.substring(0, 4));
 
                                                 payload = JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_reset: true })
                                                 await twitter_api.send_dm(twitter_user_id, content, [
