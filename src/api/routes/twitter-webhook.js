@@ -508,6 +508,8 @@ router.post('/twitter-webhook', async (req, res) => {
 
                             const answer = await penhas_api.post_answer(stash.session_id, stash.current_questionnaire_question_ref, sent_msg);
 
+                            let input_error;
+
                             const messages_len = answer.data.quiz_session.current_msgs.length;
                             let current_message_index = 0;
                             answer.data.quiz_session.current_msgs.forEach(async msg => {
@@ -565,6 +567,10 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 msg_content = msg.content;
                                             }
 
+                                            if (msg.style === 'error') {
+                                                input_error = true;
+                                            }
+
                                             await twitter_api.send_dm(twitter_user_id, msg_content)
                                         }
                                         else if (msg.type === 'button') {
@@ -593,7 +599,21 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 msg_content = msg.content;
                                             }
 
-                                            await twitter_api.send_dm(twitter_user_id, msg_content);
+                                            let options;
+                                            if (input_error) {
+                                                options = [
+                                                    {
+                                                        label: 'Sair',
+                                                        metadata: JSON.stringify({
+                                                            is_questionnaire_reset: true,
+                                                            gave_up: true
+                                                        })
+                                                    }
+                                                ]
+                                                input_error = false;
+                                            }
+
+                                            await twitter_api.send_dm(twitter_user_id, msg_content, options);
 
                                             stash.current_questionnaire_question = msg.code;
                                             stash.current_questionnaire_question_type = msg.type;
