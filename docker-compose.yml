@@ -6,6 +6,7 @@ services:
     webhook_server:
         build: .
         container_name: azmina-chatbot-webhook
+        restart: unless-stopped
         environment:
             PORT: ${PORT}
             TWITTER_CONSUMER_SECRET: ${TWITTER_CONSUMER_SECRET}
