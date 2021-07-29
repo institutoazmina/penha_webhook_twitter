@@ -305,7 +305,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                                     const analytics_post = await analytics_api.post_analytics(new_stash.conversa_id, next_message.code, new_stash.current_node, new_stash.first_msg_tz, 1, await get_tag_code(next_message.code, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', node.questionnaire_id);
                                                     const analytics_id = analytics_post.data.id;
 
-                                                    new_stash.tag_code = await get_tag_code(next_message.code, flow.tag_code_config, twitter_user_id);
+                                                    new_stash.tag_code = await get_tag_code(node.code, flow.tag_code_config, twitter_user_id);
                                                     new_stash.last_analytics_id = analytics_id;
                                                     new_stash.current_node = next_node.code;
                                                     new_stash.is_questionnaire = true;
