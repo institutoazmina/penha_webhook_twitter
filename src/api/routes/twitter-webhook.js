@@ -160,7 +160,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                 setTimeout(
                                     async () => {
                                         current_message_index++;
-
+                                        console.log(msg);
                                         if (msg.type === 'yesno') {
                                             let msg_content;
                                             if (messages_len > 1) {
