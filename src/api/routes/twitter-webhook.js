@@ -307,7 +307,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                                                     new_stash.tag_code = await get_tag_code(node.code, flow.tag_code_config, twitter_user_id);
                                                     new_stash.last_analytics_id = analytics_id;
-                                                    new_stash.current_node = next_node.code;
+                                                    new_stash.current_node = next_message.code;
                                                     new_stash.is_questionnaire = true;
                                                     new_stash.current_questionnaire_question = next_message.code;
                                                     new_stash.current_questionnaire_question_type = next_message.type;
