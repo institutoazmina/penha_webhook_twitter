@@ -52,5 +52,7 @@ services:
             max-size: 1m
 networks:
     external:
+        driver: bridge
+        name: twitter_chatbot
     cache:
         driver: bridge
