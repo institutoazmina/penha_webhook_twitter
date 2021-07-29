@@ -269,7 +269,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         if (msg.code) {
 
                                             if (msg.code.substring(0, 5) === 'RESET') {
-                                                const node = flow.nodes[1];
+                                                const node = flow.nodes[3];
                                                 const new_stash = {
                                                     current_node: flow.nodes[0].code,
                                                     started_at: Date.now(),
