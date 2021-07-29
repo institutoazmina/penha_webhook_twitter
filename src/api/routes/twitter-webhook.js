@@ -223,7 +223,8 @@ router.post('/twitter-webhook', async (req, res) => {
 
                                         if (msg.code) {
 
-
+                                            console.log('Stash antes de enviar para analytics');
+                                            console.log(stash);
                                             const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, (stash.tag_code || await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id)), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
                                             analytics_id = analytics_post.data.id;
 
