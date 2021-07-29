@@ -153,14 +153,14 @@ router.post('/twitter-webhook', async (req, res) => {
                             let timeout = 0;
 
                             const answer = await penhas_api.post_answer(metadata.session_id, metadata.question_ref, metadata.index);
-                            console.log(answer.data.quiz_session.current_msgs);
+
                             const messages_len = answer.data.quiz_session.current_msgs.length;
                             let current_message_index = 0;
                             answer.data.quiz_session.current_msgs.forEach(async msg => {
                                 setTimeout(
                                     async () => {
                                         current_message_index++;
-                                        console.log(msg);
+
                                         if (msg.type === 'yesno') {
                                             let msg_content;
                                             if (messages_len > 1) {
@@ -227,17 +227,26 @@ router.post('/twitter-webhook', async (req, res) => {
                                             let payload;
                                             if (msg.code.substring(0, 3) === 'FIM') {
                                                 payload = JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
+                                                await twitter_api.send_dm(twitter_user_id, content, [
+                                                    {
+                                                        label: msg.label,
+                                                        metadata: payload
+                                                    }
+                                                ]);
+                                            }
+                                            else if (msg.coode.substring(0, 5 === 'RESET')) {
+
                                             }
                                             else {
                                                 payload = JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_reset: true })
+                                                await twitter_api.send_dm(twitter_user_id, content, [
+                                                    {
+                                                        label: msg.label,
+                                                        metadata: payload
+                                                    }
+                                                ]);
                                             }
 
-                                            await twitter_api.send_dm(twitter_user_id, content, [
-                                                {
-                                                    label: msg.label,
-                                                    metadata: payload
-                                                }
-                                            ]);
                                         }
                                         else if (msg.type === 'text') {
                                             let msg_content;
@@ -259,17 +268,50 @@ router.post('/twitter-webhook', async (req, res) => {
 
                                         if (msg.code) {
 
-                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, (stash.tag_code || await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id)), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
-                                            analytics_id = analytics_post.data.id;
+                                            if (msg.coode.substring(0, 5 === 'RESET')) {
+                                                const node = flow.nodes[1];
+                                                const new_stash = {
+                                                    current_node: flow.nodes[0].code,
+                                                    started_at: Date.now(),
+                                                    first_msg_epoch: Number(dm.created_timestamp),
+                                                    first_msg_tz: msg_tz,
+                                                    current_questionnaire_options: node.quick_replies
+                                                }
 
-                                            stash.tag_code = await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id);
-                                            stash.last_analytics_id = analytics_id;
-                                            stash.current_questionnaire_question = msg.code;
-                                            stash.current_questionnaire_question_type = msg.type;
-                                            stash.current_questionnaire_question_ref = msg.ref;
-                                            stash.current_questionnaire_options = msg.options;
+                                                // Iniciando conversa na API de analytics
+                                                const conversa = await analytics_api.post_conversa(remote_id, msg_tz);
+                                                const conversa_id = conversa.data.id;
+                                                new_stash.conversa_id = conversa_id;
 
-                                            await stasher.save_stash(twitter_user_id, stash);
+                                                // Fazendo post de analytics
+                                                const analytics_post = await analytics_api.post_analytics(conversa_id, stash.current_node, undefined, stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
+                                                const analytics_id = analytics_post.data.id;
+                                                new_stash.last_analytics_id = analytics_id;
+
+                                                // Verificando por mensagens
+                                                const messages = node.messages;
+                                                if (messages) {
+                                                    const text = messages.join('\n');
+                                                    await twitter_api.send_dm(twitter_user_id, text, node.quick_replies);
+                                                }
+
+                                                await stasher.save_stash(twitter_user_id, new_stash);
+                                            }
+                                            else {
+
+                                                const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, (stash.tag_code || await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id)), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
+                                                analytics_id = analytics_post.data.id;
+
+                                                stash.tag_code = await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id);
+                                                stash.last_analytics_id = analytics_id;
+                                                stash.current_questionnaire_question = msg.code;
+                                                stash.current_questionnaire_question_type = msg.type;
+                                                stash.current_questionnaire_question_ref = msg.ref;
+                                                stash.current_questionnaire_options = msg.options;
+
+                                                await stasher.save_stash(twitter_user_id, stash);
+                                            }
+
                                         }
                                     },
                                     timeout
