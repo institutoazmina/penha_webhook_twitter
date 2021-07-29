@@ -34,14 +34,9 @@ async function get_tag_code(msg_code, tag_code_config, twitter_user_id) {
             if (scenario.check_code === msg_code) {
                 tag_code_value = scenario.tag_code_value;
 
-                console.log('salvando tag code na stash');
-                console.log('stash a ser salva: ');
-                stash.tag_code = tag_code_value;
-                console.log(stash);
             }
         })
 
-        await stasher.save_stash(twitter_user_id, stash);
 
         return tag_code_value || 0;
     }
@@ -127,6 +122,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                 const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_message.code, stash.current_node, stash.first_msg_tz, 1, await get_tag_code(next_message.code, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', next_node.questionnaire_id);
                                 const analytics_id = analytics_post.data.id;
 
+                                stash.tag_code = await get_tag_code(next_message.code, flow.tag_code_config, twitter_user_id);
                                 stash.last_analytics_id = analytics_id;
                                 stash.current_node = next_node.code;
                                 stash.is_questionnaire = true;
@@ -228,6 +224,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                             const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, (stash.tag_code || await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id)), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
                                             analytics_id = analytics_post.data.id;
 
+                                            stash.tag_code = await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id);
                                             stash.last_analytics_id = analytics_id;
                                             stash.current_questionnaire_question = msg.code;
                                             stash.current_questionnaire_question_type = msg.type;
