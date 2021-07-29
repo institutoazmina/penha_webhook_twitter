@@ -187,7 +187,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                             }));
                                         }
                                         else if (msg.type === 'displaytext') {
-                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content)
+                                            await twitter_api.send_dm(twitter_user_id, msg.content + (messages_len > 1 ? `[${current_message_index}/${messages_len}]` : ``))
                                         }
                                         else if (msg.type === 'button') {
                                             const content = msg.content.length > 1 ? `${current_message_index}/${messages_len} ` + msg.content : 'Texto de finalização do questionário';
@@ -208,7 +208,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                             ]);
                                         }
                                         else if (msg.type === 'text') {
-                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content);
+                                            await twitter_api.send_dm(twitter_user_id, msg.content + (messages_len > 1 ? `[${current_message_index}/${messages_len}]` : ``));
 
                                             stash.current_questionnaire_question = msg.code;
                                             stash.current_questionnaire_question_type = msg.type;
@@ -219,8 +219,6 @@ router.post('/twitter-webhook', async (req, res) => {
 
                                         if (msg.code) {
 
-                                            console.log('Stash antes de enviar para analytics');
-                                            console.log(stash);
                                             const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, (stash.tag_code || await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id)), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
                                             analytics_id = analytics_post.data.id;
 
@@ -319,7 +317,6 @@ router.post('/twitter-webhook', async (req, res) => {
                     const sent_msg = untreated_msg.toLowerCase();
 
                     if (sent_msg === 'reiniciar') {
-                        console.log(stash);
                         const step_code = stash.current_questionnaire_question ? stash.current_questionnaire_question : stash.current_node;
                         await analytics_api.post_analytics(stash.conversa_id, step_code, step_code, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_GAVE_UP');
                         await stasher.delete_stash(twitter_user_id);
@@ -392,10 +389,10 @@ router.post('/twitter-webhook', async (req, res) => {
                                             }));
                                         }
                                         else if (msg.type === 'displaytext') {
-                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content)
+                                            await twitter_api.send_dm(twitter_user_id, msg.content + (messages_len > 1 ? `[${current_message_index}/${messages_len}]` : ``))
                                         }
                                         else if (msg.type === 'button') {
-                                            const content = msg.content.length > 1 ? `${current_message_index}/${messages_len} ` + msg.content : 'Texto de finalização do questionário';
+                                            const content = msg.content.length > 1 ? msg.content + (messages_len > 1 ? `[${current_message_index}/${messages_len}]` : ``) : 'Texto de finalização do questionário';
                                             await twitter_api.send_dm(twitter_user_id, content, [
                                                 {
                                                     label: msg.label,
@@ -436,7 +433,6 @@ router.post('/twitter-webhook', async (req, res) => {
 
                         }
                         else {
-                            console.log(stash);
                             if (stash.is_questionnaire) {
                                 await twitter_api.send_dm(twitter_user_id, flow.error_msg, stash.current_questionnaire_options.map((opt) => {
                                     return { label: opt.display.substring(0, 36), metadata: JSON.stringify({ question_ref: stash.current_questionnaire_question_ref, index: opt.index, session_id: stash.session_id, is_questionnaire: true }) }
