@@ -153,7 +153,7 @@ router.post('/twitter-webhook', async (req, res) => {
                             let timeout = 0;
 
                             const answer = await penhas_api.post_answer(metadata.session_id, metadata.question_ref, metadata.index);
-                            console.log(answer.data);
+                            console.log(answer.data.quiz_session.current_msgs);
                             const messages_len = answer.data.quiz_session.current_msgs.length;
                             let current_message_index = 0;
                             answer.data.quiz_session.current_msgs.forEach(async msg => {
