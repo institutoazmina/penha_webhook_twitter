@@ -302,7 +302,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                                         }
                                                     }));
 
-                                                    const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_message.code, stash.current_node, stash.first_msg_tz, 1, await get_tag_code(next_message.code, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', next_node.questionnaire_id);
+                                                    const analytics_post = await analytics_api.post_analytics(new_stash.conversa_id, next_message.code, new_stash.current_node, new_stash.first_msg_tz, 1, await get_tag_code(next_message.code, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', node.questionnaire_id);
                                                     const analytics_id = analytics_post.data.id;
 
                                                     new_stash.tag_code = await get_tag_code(next_message.code, flow.tag_code_config, twitter_user_id);
