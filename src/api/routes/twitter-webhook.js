@@ -152,6 +152,8 @@ router.post('/twitter-webhook', async (req, res) => {
                         if (metadata.is_questionnaire) {
                             let timeout = 0;
 
+                            let input_error;
+
                             const answer = await penhas_api.post_answer(metadata.session_id, metadata.question_ref, metadata.index);
 
                             const messages_len = answer.data.quiz_session.current_msgs.length;
@@ -211,17 +213,8 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 msg_content = msg.content;
                                             }
 
-                                            let options;
                                             if (msg.style === 'error') {
-                                                options = [
-                                                    {
-                                                        label: 'Sair',
-                                                        metadata: JSON.stringify({
-                                                            is_questionnaire_reset: true,
-                                                            gave_up: true
-                                                        })
-                                                    }
-                                                ]
+                                                input_error = true;
                                             }
 
                                             await twitter_api.send_dm(twitter_user_id, msg_content, options)
@@ -270,7 +263,21 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 msg_content = msg.content;
                                             }
 
-                                            await twitter_api.send_dm(twitter_user_id, msg_content);
+                                            let options;
+                                            if (input_error) {
+                                                options = [
+                                                    {
+                                                        label: 'Sair',
+                                                        metadata: JSON.stringify({
+                                                            is_questionnaire_reset: true,
+                                                            gave_up: true
+                                                        })
+                                                    }
+                                                ]
+                                                input_error = false;
+                                            }
+
+                                            await twitter_api.send_dm(twitter_user_id, msg_content, options);
 
                                             stash.current_questionnaire_question = msg.code;
                                             stash.current_questionnaire_question_type = msg.type;
