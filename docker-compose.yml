@@ -56,3 +56,6 @@ networks:
         name: twitter_chatbot
     cache:
         driver: bridge
+
+volumes:
+    redis_data:
