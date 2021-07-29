@@ -162,7 +162,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                         current_message_index++;
 
                                         if (msg.type === 'yesno') {
-                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content, [
+                                            let msg_content;
+                                            if (messages_len.length > 1) {
+                                                msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
+                                            }
+                                            else {
+                                                msg_content = msg.content;
+                                            }
+
+                                            await twitter_api.send_dm(twitter_user_id, msg_content, [
                                                 {
                                                     label: 'Sim',
                                                     metadata: JSON.stringify({ question_ref: msg.ref, index: 'Y', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
@@ -173,7 +181,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 }
                                             ]);
                                         } else if (msg.type === 'onlychoice') {
-                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content, msg.options.map((opt) => {
+                                            let msg_content;
+                                            if (messages_len.length > 1) {
+                                                msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
+                                            }
+                                            else {
+                                                msg_content = msg.content;
+                                            }
+
+                                            await twitter_api.send_dm(twitter_user_id, msg_content, msg.options.map((opt) => {
                                                 return {
                                                     label: opt.display.substring(0, 36),
                                                     metadata: JSON.stringify({
@@ -198,7 +214,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                             await twitter_api.send_dm(twitter_user_id, msg_content)
                                         }
                                         else if (msg.type === 'button') {
-                                            const content = msg.content.length > 1 ? `${current_message_index}/${messages_len} ` + msg.content : 'Texto de finalização do questionário';
+                                            let msg_content;
+                                            if (messages_len.length > 1) {
+                                                msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
+                                            }
+                                            else {
+                                                msg_content = msg.content;
+                                            }
+
+                                            const content = msg.content.length > 1 ? msg_content : 'Texto de finalização do questionário';
 
                                             let payload;
                                             if (msg.code.substring(0, 3) === 'FIM') {
@@ -380,7 +404,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                         current_message_index++;
 
                                         if (msg.type === 'yesno') {
-                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content, [
+                                            let msg_content;
+                                            if (messages_len.length > 1) {
+                                                msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
+                                            }
+                                            else {
+                                                msg_content = msg.content;
+                                            }
+
+                                            await twitter_api.send_dm(twitter_user_id, msg_content, [
                                                 {
                                                     label: 'Sim',
                                                     metadata: JSON.stringify({ question_ref: msg.ref, index: 'Y', session_id: answer.data.quiz_session.session_id, is_questionnaire: true })
@@ -391,7 +423,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 }
                                             ]);
                                         } else if (msg.type === 'onlychoice') {
-                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content, msg.options.map((opt) => {
+                                            let msg_content;
+                                            if (messages_len.length > 1) {
+                                                msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
+                                            }
+                                            else {
+                                                msg_content = msg.content;
+                                            }
+
+                                            await twitter_api.send_dm(twitter_user_id, msg_content, msg.options.map((opt) => {
                                                 return {
                                                     label: opt.display.substring(0, 36),
                                                     metadata: JSON.stringify({
