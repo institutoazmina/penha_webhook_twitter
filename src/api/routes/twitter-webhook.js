@@ -269,7 +269,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         if (msg.code) {
 
                                             if (msg.code.substring(0, 5) === 'RESET') {
-                                                await analytics_api.post_analytics(new_stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(msg.code, flow.tag_code_config, twitter_user_id), 'QUESTIONNAIRE_FINISHED', node.questionnaire_id);
+                                                await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(msg.code, flow.tag_code_config, twitter_user_id), 'QUESTIONNAIRE_FINISHED', node.questionnaire_id);
 
                                                 const node = flow.nodes[3];
                                                 const new_stash = {
