@@ -217,7 +217,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 input_error = true;
                                             }
 
-                                            await twitter_api.send_dm(twitter_user_id, msg_content, options)
+                                            await twitter_api.send_dm(twitter_user_id, msg_content)
                                         }
                                         else if (msg.type === 'button') {
                                             let msg_content;
