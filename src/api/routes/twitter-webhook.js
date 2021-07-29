@@ -224,7 +224,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         if (msg.code) {
 
 
-                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(metada.code_value, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
+                                            const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
                                             analytics_id = analytics_post.data.id;
 
                                             stash.last_analytics_id = analytics_id;
