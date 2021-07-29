@@ -229,15 +229,17 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 payload = JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
                                                 await twitter_api.send_dm(twitter_user_id, content, [
                                                     {
-                                                        label: msg.label,
+                                                        label: 'Voltar ao início',
                                                         metadata: payload
                                                     }
                                                 ]);
                                             }
                                             else if (msg.code.substring(0, 5 === 'RESET')) {
-
+                                                console.log('ta aqui no reset');
                                             }
                                             else {
+                                                console.log('ta aqui no else');
+
                                                 payload = JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_reset: true })
                                                 await twitter_api.send_dm(twitter_user_id, content, [
                                                     {
@@ -331,7 +333,7 @@ router.post('/twitter-webhook', async (req, res) => {
                         else if (metadata.is_questionnaire_end) {
                             await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(stash.current_questionnaire_question, flow.tag_code_config, twitter_user_id), 'QUESTIONNAIRE_FINISHED', stash.current_questionnaire_id);
 
-                            const node = flow.nodes[0];
+                            const node = flow.nodes[1];
                             const new_stash = {
                                 current_node: flow.nodes[0].code,
                                 started_at: Date.now(),
