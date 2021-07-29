@@ -269,6 +269,8 @@ router.post('/twitter-webhook', async (req, res) => {
                                         if (msg.code) {
 
                                             if (msg.code.substring(0, 5) === 'RESET') {
+                                                await analytics_api.post_analytics(new_stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(msg.code, flow.tag_code_config, twitter_user_id), 'QUESTIONNAIRE_FINISHED', node.questionnaire_id);
+
                                                 const node = flow.nodes[3];
                                                 const new_stash = {
                                                     current_node: flow.nodes[0].code,
@@ -313,7 +315,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                                     new_stash.current_questionnaire_question_type = next_message.type;
                                                     new_stash.current_questionnaire_question_ref = next_message.ref;
                                                     new_stash.current_questionnaire_options = next_message.options;
-                                                    new_stash.current_questionnaire_id = next_node.questionnaire_id;
+                                                    new_stash.current_questionnaire_id = node.questionnaire_id;
                                                     new_stash.session_id = questionnaire_data.quiz_session.session_id;
 
                                                 }
