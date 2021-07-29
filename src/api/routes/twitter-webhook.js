@@ -163,7 +163,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                                         if (msg.type === 'yesno') {
                                             let msg_content;
-                                            if (messages_len.length > 1) {
+                                            if (messages_len > 1) {
                                                 msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
                                             }
                                             else {
@@ -182,7 +182,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                             ]);
                                         } else if (msg.type === 'onlychoice') {
                                             let msg_content;
-                                            if (messages_len.length > 1) {
+                                            if (messages_len > 1) {
                                                 msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
                                             }
                                             else {
@@ -204,7 +204,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         }
                                         else if (msg.type === 'displaytext') {
                                             let msg_content;
-                                            if (messages_len.length > 1) {
+                                            if (messages_len > 1) {
                                                 msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
                                             }
                                             else {
@@ -215,7 +215,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         }
                                         else if (msg.type === 'button') {
                                             let msg_content;
-                                            if (messages_len.length > 1) {
+                                            if (messages_len > 1) {
                                                 msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
                                             }
                                             else {
@@ -241,7 +241,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         }
                                         else if (msg.type === 'text') {
                                             let msg_content;
-                                            if (messages_len.length > 1) {
+                                            if (messages_len > 1) {
                                                 msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
                                             }
                                             else {
@@ -405,7 +405,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                                         if (msg.type === 'yesno') {
                                             let msg_content;
-                                            if (messages_len.length > 1) {
+                                            if (messages_len > 1) {
                                                 msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
                                             }
                                             else {
@@ -424,7 +424,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                             ]);
                                         } else if (msg.type === 'onlychoice') {
                                             let msg_content;
-                                            if (messages_len.length > 1) {
+                                            if (messages_len > 1) {
                                                 msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
                                             }
                                             else {
@@ -446,7 +446,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         }
                                         else if (msg.type === 'displaytext') {
                                             let msg_content;
-                                            if (messages_len.length > 1) {
+                                            if (messages_len > 1) {
                                                 msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
                                             }
                                             else {
@@ -457,7 +457,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         }
                                         else if (msg.type === 'button') {
                                             let msg_content;
-                                            if (messages_len.length > 1) {
+                                            if (messages_len > 1) {
                                                 msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
                                             }
                                             else {
@@ -474,7 +474,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                         }
                                         else if (msg.type === 'text') {
                                             let msg_content;
-                                            if (messages_len.length > 1) {
+                                            if (messages_len > 1) {
                                                 msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
                                             }
                                             else {
