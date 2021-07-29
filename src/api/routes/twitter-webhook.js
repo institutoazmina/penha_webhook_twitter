@@ -187,7 +187,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                             }));
                                         }
                                         else if (msg.type === 'displaytext') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content + (messages_len > 1 ? `[${current_message_index}/${messages_len}]` : ``))
+                                            let msg_content;
+                                            if (messages_len.length > 1) {
+                                                msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
+                                            }
+                                            else {
+                                                msg_content = msg.content;
+                                            }
+
+                                            await twitter_api.send_dm(twitter_user_id, msg_content)
                                         }
                                         else if (msg.type === 'button') {
                                             const content = msg.content.length > 1 ? `${current_message_index}/${messages_len} ` + msg.content : 'Texto de finalização do questionário';
@@ -208,7 +216,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                             ]);
                                         }
                                         else if (msg.type === 'text') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content + (messages_len > 1 ? `[${current_message_index}/${messages_len}]` : ``));
+                                            let msg_content;
+                                            if (messages_len.length > 1) {
+                                                msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
+                                            }
+                                            else {
+                                                msg_content = msg.content;
+                                            }
+
+                                            await twitter_api.send_dm(twitter_user_id, msg_content);
 
                                             stash.current_questionnaire_question = msg.code;
                                             stash.current_questionnaire_question_type = msg.type;
@@ -389,10 +405,26 @@ router.post('/twitter-webhook', async (req, res) => {
                                             }));
                                         }
                                         else if (msg.type === 'displaytext') {
-                                            await twitter_api.send_dm(twitter_user_id, msg.content + (messages_len > 1 ? `[${current_message_index}/${messages_len}]` : ``))
+                                            let msg_content;
+                                            if (messages_len.length > 1) {
+                                                msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
+                                            }
+                                            else {
+                                                msg_content = msg.content;
+                                            }
+
+                                            await twitter_api.send_dm(twitter_user_id, msg_content)
                                         }
                                         else if (msg.type === 'button') {
-                                            const content = msg.content.length > 1 ? msg.content + (messages_len > 1 ? `[${current_message_index}/${messages_len}]` : ``) : 'Texto de finalização do questionário';
+                                            let msg_content;
+                                            if (messages_len.length > 1) {
+                                                msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
+                                            }
+                                            else {
+                                                msg_content = msg.content;
+                                            }
+
+                                            const content = msg.content.length > 1 ? msg_content : 'Texto de finalização do questionário';
                                             await twitter_api.send_dm(twitter_user_id, content, [
                                                 {
                                                     label: msg.label,
@@ -401,7 +433,15 @@ router.post('/twitter-webhook', async (req, res) => {
                                             ]);
                                         }
                                         else if (msg.type === 'text') {
-                                            await twitter_api.send_dm(twitter_user_id, `${current_message_index}/${messages_len} ` + msg.content);
+                                            let msg_content;
+                                            if (messages_len.length > 1) {
+                                                msg_content = msg.content + ` [${current_message_index}/${messages_len}]`
+                                            }
+                                            else {
+                                                msg_content = msg.content;
+                                            }
+
+                                            await twitter_api.send_dm(twitter_user_id, msg_content);
 
                                             stash.current_questionnaire_question = msg.code;
                                             stash.current_questionnaire_question_type = msg.type;
