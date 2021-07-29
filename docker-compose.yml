@@ -1,6 +1,6 @@
 version: "3.5"
 networks:
-    analytics:
+    external:
     redis:
 services:
     webhook_server:
@@ -27,7 +27,7 @@ services:
         volumes:
             - ${HOST_MACHINE_LOG_DIR}:${LOG_DIR}
         networks:
-            - analytics
+            - external
             - redis
 
     redis:
