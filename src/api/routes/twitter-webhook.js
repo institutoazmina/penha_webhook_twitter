@@ -90,7 +90,7 @@ router.post('/twitter-webhook', async (req, res) => {
                             return n.code === quick_reply;
                         });
                         next_node = next_node[0];
-
+                        console.log(next_node);
                         const analytics_post = await analytics_api.post_analytics(stash.conversa_id, next_node.code, stash.current_node, stash.first_msg_tz, 1, undefined, 'DURING_DECISION_TREE');
                         const analytics_id = analytics_post.data.id;
 
@@ -334,6 +334,7 @@ router.post('/twitter-webhook', async (req, res) => {
                             await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(stash.current_questionnaire_question, flow.tag_code_config, twitter_user_id), 'QUESTIONNAIRE_FINISHED', stash.current_questionnaire_id);
 
                             const node = flow.nodes[1];
+                            console.log(node);
                             const new_stash = {
                                 current_node: flow.nodes[0].code,
                                 started_at: Date.now(),
@@ -364,7 +365,7 @@ router.post('/twitter-webhook', async (req, res) => {
                         else if (metadata.is_questionnaire_reset) {
                             await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, undefined, 'QUESTIONNAIRE_RESET', stash.current_questionnaire_id);
 
-                            const node = flow.nodes[0];
+                            const node = flow.nodes[3];
                             const new_stash = {
                                 current_node: flow.nodes[0].code,
                                 started_at: Date.now(),
