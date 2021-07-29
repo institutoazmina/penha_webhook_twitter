@@ -234,7 +234,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                                     }
                                                 ]);
                                             }
-                                            else if (msg.coode.substring(0, 5 === 'RESET')) {
+                                            else if (msg.code.substring(0, 5 === 'RESET')) {
 
                                             }
                                             else {
@@ -268,7 +268,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
                                         if (msg.code) {
 
-                                            if (msg.coode.substring(0, 5 === 'RESET')) {
+                                            if (msg.code.substring(0, 5 === 'RESET')) {
                                                 const node = flow.nodes[1];
                                                 const new_stash = {
                                                     current_node: flow.nodes[0].code,
