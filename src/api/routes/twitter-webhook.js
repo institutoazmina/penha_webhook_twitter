@@ -345,20 +345,34 @@ router.post('/twitter-webhook', async (req, res) => {
 
                                                 await stasher.save_stash(twitter_user_id, new_stash);
                                             }
-                                            else if (msg.code.substring(0, 3) === 'FIM') { }
-                                            else {
-
-                                                const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, (stash.tag_code || await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id)), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
-                                                analytics_id = analytics_post.data.id;
-
-                                                stash.tag_code = await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id);
-                                                stash.last_analytics_id = analytics_id;
+                                            else if (msg.code.substring(0, 3) === 'FIM') {
                                                 stash.current_questionnaire_question = msg.code;
                                                 stash.current_questionnaire_question_type = msg.type;
                                                 stash.current_questionnaire_question_ref = msg.ref;
-                                                stash.current_questionnaire_options = msg.options;
+                                                stash.current_questionnaire_options = [
+                                                    {
+                                                        label: 'Voltar ao início',
+                                                        metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
+                                                    }
+                                                ];
 
                                                 await stasher.save_stash(twitter_user_id, stash);
+                                            }
+                                            else {
+
+                                                if (msg.code != stash.current_questionnaire_question) {
+                                                    const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, (stash.tag_code || await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id)), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
+                                                    analytics_id = analytics_post.data.id;
+
+                                                    stash.tag_code = await get_tag_code(metadata.code_value, flow.tag_code_config, twitter_user_id);
+                                                    stash.last_analytics_id = analytics_id;
+                                                    stash.current_questionnaire_question = msg.code;
+                                                    stash.current_questionnaire_question_type = msg.type;
+                                                    stash.current_questionnaire_question_ref = msg.ref;
+                                                    stash.current_questionnaire_options = msg.options;
+
+                                                    await stasher.save_stash(twitter_user_id, stash);
+                                                }
                                             }
 
                                         }
@@ -699,7 +713,19 @@ router.post('/twitter-webhook', async (req, res) => {
 
                                                 await stasher.save_stash(twitter_user_id, new_stash);
                                             }
-                                            else if (msg.code.substring(0, 3) === 'FIM') { }
+                                            else if (msg.code.substring(0, 3) === 'FIM') {
+                                                stash.current_questionnaire_question = msg.code;
+                                                stash.current_questionnaire_question_type = msg.type;
+                                                stash.current_questionnaire_question_ref = msg.ref;
+                                                stash.current_questionnaire_options = [
+                                                    {
+                                                        label: 'Voltar ao início',
+                                                        metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
+                                                    }
+                                                ];
+
+                                                await stasher.save_stash(twitter_user_id, stash);
+                                            }
                                             else {
 
                                                 const analytics_post = await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, (stash.tag_code || await get_tag_code(msg.code, flow.tag_code_config, twitter_user_id)), 'DURING_QUESTIONNAIRE', stash.current_questionnaire_id);
