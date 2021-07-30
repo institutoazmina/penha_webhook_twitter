@@ -23,12 +23,17 @@ async function post_answer(session_id, question_ref, index) {
     bodyFormData.append(question_ref, index);
     console.log('fazendo post do questionario\n')
 
-    return await axios({
+    const req = await axios({
         method: 'post',
         url: process.env.PENHAS_API_URL + '/anon-questionnaires/process',
         data: bodyFormData,
         headers: bodyFormData.getHeaders(),
     });
+
+    console.log('Resposta da req do penhas');
+    console.log(req.data);
+
+    return req;
 }
 
 async function fetch_config_json() {
