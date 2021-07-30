@@ -1,21 +1,35 @@
 version: "3.5"
-networks:
-    external:
-    redis:
 services:
+    redis:
+        image: docker.io/bitnami/redis:6.2
+        environment:
+          REDIS_PASSWORD: "${REDIS_PASSWORD}"
+          REDIS_DISABLE_COMMANDS: "FLUSHDB,FLUSHALL"
+        networks:
+          - cache
+        expose:
+          - "6379"
+        volumes:
+          - redis_data:/bitnami/redis/data
+        logging:
+          driver: "json-file"
+          options:
+            max-file: '100'
+            max-size: 1m
+
     webhook_server:
         build: .
         container_name: azmina-chatbot-webhook
         restart: unless-stopped
         environment:
-            PORT: ${PORT}
+            PORT: 8080
             TWITTER_CONSUMER_SECRET: ${TWITTER_CONSUMER_SECRET}
             TWITTER_CONSUMER_KEY: ${TWITTER_CONSUMER_KEY}
             TWITTER_ACCESS_TOKEN: ${TWITTER_ACCESS_TOKEN}
             TWITTER_ACCESS_TOKEN_SECRET: ${TWITTER_ACCESS_TOKEN_SECRET}
 
-            REDIS_HOST: ${REDIS_HOST}
-            REDIS_PORT: ${REDIS_PORT}
+            REDIS_HOST: redis
+            REDIS_PORT: "6379"
             REDIS_PASSWORD: ${REDIS_PASSWORD}
 
             ANALYTICS_API_URL: ${ANALYTICS_API_URL}
@@ -23,16 +37,25 @@ services:
 
             PENHAS_API_URL: ${PENHAS_API_URL}
             PENHAS_API_TOKEN: ${PENHAS_API_TOKEN}
+            LOG_DIR: /tmp/log
         ports:
-            - ${LAN_IP}:${EXPOSED_PORT}:${PORT}
+            - ${BIND_INTERFACE}:${BIND_INTERFACE_PORT}:8080
         volumes:
-            - ${HOST_MACHINE_LOG_DIR}:${LOG_DIR}
+            - ${HOST_MACHINE_LOG_DIR}:/tmp/log
         networks:
             - external
-            - redis
+            - cache
+        logging:
+          driver: "json-file"
+          options:
+            max-file: '100'
+            max-size: 1m
+networks:
+    external:
+        driver: bridge
+        name: twitter_chatbot
+    cache:
+        driver: bridge
 
-    redis:
-        image: redis@sha256:442fbfdeccf203c277827cfd8e7e727ce411611e1a6caeda9cca8115ed17b9cc
-        container_name: azmina-chatbot-redis
-        networks:
-            - redis
+volumes:
+    redis_data:
