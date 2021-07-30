@@ -33,6 +33,15 @@ async function post_answer(session_id, question_ref, index) {
     console.log('Resposta da req do penhas');
     console.log(req.data);
 
+    if (req.data.quiz_session) {
+        console.log('current messages: ')
+        if (req.data.quiz_session.current_msgs) {
+            req.data.quiz_session.current_msgs.array.forEach(element => {
+                console.log(element);
+            });
+        }
+    }
+
     return req;
 }
 
