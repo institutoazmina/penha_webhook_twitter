@@ -232,6 +232,8 @@ router.post('/twitter-webhook', async (req, res) => {
 
                                             let payload;
                                             if (msg.code.substring(0, 3) === 'FIM') {
+                                                await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(msg.code, flow.tag_code_config, twitter_user_id), 'QUESTIONNAIRE_FINISHED', stash.current_questionnaire_id);
+
                                                 payload = JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
                                                 await twitter_api.send_dm(twitter_user_id, content, [
                                                     {
@@ -375,7 +377,6 @@ router.post('/twitter-webhook', async (req, res) => {
                             await twitter_api.send_dm(twitter_user_id, 'Fluxo reiniciado, na próxima mensagem você irá receber a mensagem inicial.')
                         }
                         else if (metadata.is_questionnaire_end) {
-                            await analytics_api.post_analytics(stash.conversa_id, stash.current_questionnaire_question, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(stash.current_questionnaire_question, flow.tag_code_config, twitter_user_id), 'QUESTIONNAIRE_FINISHED', stash.current_questionnaire_id);
 
                             const node = flow.nodes[1];
                             console.log(node);
