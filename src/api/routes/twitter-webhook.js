@@ -583,13 +583,31 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 msg_content = msg.content;
                                             }
 
-                                            const content = msg.content.length > 1 ? msg_content : 'Texto de finalização do questionário';
-                                            await twitter_api.send_dm(twitter_user_id, content, [
-                                                {
-                                                    label: msg.label,
-                                                    metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
-                                                }
-                                            ]);
+                                            let payload;
+                                            if (msg.code.substring(0, 3) === 'FIM') {
+                                                await analytics_api.post_analytics(stash.conversa_id, msg.code, stash.current_questionnaire_question, stash.first_msg_tz, 1, await get_tag_code(msg.code, flow.tag_code_config, twitter_user_id), 'QUESTIONNAIRE_FINISHED', stash.current_questionnaire_id);
+
+                                                payload = JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
+                                                await twitter_api.send_dm(twitter_user_id, msg_content, [
+                                                    {
+                                                        label: 'Voltar ao início',
+                                                        metadata: payload
+                                                    }
+                                                ]);
+                                            }
+                                            else if (msg.code.substring(0, 5) === 'RESET') {
+                                            }
+                                            else {
+
+                                                payload = JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_reset: true })
+                                                await twitter_api.send_dm(twitter_user_id, msg_content, [
+                                                    {
+                                                        label: msg.label,
+                                                        metadata: payload
+                                                    }
+                                                ]);
+                                            }
+
                                         }
                                         else if (msg.type === 'text') {
                                             let msg_content;
