@@ -237,7 +237,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 payload = JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
                                                 await twitter_api.send_dm(twitter_user_id, content, [
                                                     {
-                                                        label: 'Voltar ao início',
+                                                        label: '🔃 Voltar ao início',
                                                         metadata: payload
                                                     }
                                                 ]);
@@ -269,7 +269,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                             if (input_error) {
                                                 options = [
                                                     {
-                                                        label: 'Sair',
+                                                        label: '🔙 Sair',
                                                         metadata: JSON.stringify({
                                                             is_questionnaire_reset: true,
                                                             gave_up: true
@@ -352,7 +352,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 stash.is_questionnaire = false;
                                                 stash.current_questionnaire_options = [
                                                     {
-                                                        label: 'Voltar ao início',
+                                                        label: '🔃 Voltar ao início',
                                                         metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
                                                     }
                                                 ];
@@ -625,7 +625,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 payload = JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
                                                 await twitter_api.send_dm(twitter_user_id, msg_content, [
                                                     {
-                                                        label: 'Voltar ao início',
+                                                        label: '🔃 Voltar ao início',
                                                         metadata: payload
                                                     }
                                                 ]);
@@ -657,7 +657,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                             if (input_error) {
                                                 options = [
                                                     {
-                                                        label: 'Sair',
+                                                        label: '🔙 Sair',
                                                         metadata: JSON.stringify({
                                                             is_questionnaire_reset: true,
                                                             gave_up: true
@@ -740,7 +740,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 stash.is_questionnaire = false;
                                                 stash.current_questionnaire_options = [
                                                     {
-                                                        label: 'Voltar ao início',
+                                                        label: '🔃 Voltar ao início',
                                                         metadata: JSON.stringify({ question_ref: msg.ref, session_id: answer.data.quiz_session.session_id, is_questionnaire_end: true })
                                                     }
                                                 ];
