@@ -425,9 +425,16 @@ router.post('/twitter-webhook', async (req, res) => {
                         }
                         else if (metadata.is_questionnaire_reset) {
 
-                            const node = flow.nodes[3];
+                            let node;
+                            if (metadata.gave_up) {
+                                node = flow.nodes[1];
+                            }
+                            else {
+                                node = flow.nodes[3]
+                            }
+
                             const new_stash = {
-                                current_node: flow.nodes[3].code,
+                                current_node: node.code,
                                 started_at: Date.now(),
                                 first_msg_epoch: Number(dm.created_timestamp),
                                 first_msg_tz: msg_tz,
