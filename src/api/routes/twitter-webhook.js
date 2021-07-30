@@ -349,6 +349,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 stash.current_questionnaire_question = msg.code;
                                                 stash.current_questionnaire_question_type = msg.type;
                                                 stash.current_questionnaire_question_ref = msg.ref;
+                                                stash.is_questionnaire = false;
                                                 stash.current_questionnaire_options = [
                                                     {
                                                         label: 'Voltar ao início',
@@ -717,6 +718,7 @@ router.post('/twitter-webhook', async (req, res) => {
                                                 stash.current_questionnaire_question = msg.code;
                                                 stash.current_questionnaire_question_type = msg.type;
                                                 stash.current_questionnaire_question_ref = msg.ref;
+                                                stash.is_questionnaire = false;
                                                 stash.current_questionnaire_options = [
                                                     {
                                                         label: 'Voltar ao início',
