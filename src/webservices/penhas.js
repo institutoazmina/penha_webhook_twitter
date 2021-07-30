@@ -36,7 +36,7 @@ async function post_answer(session_id, question_ref, index) {
     if (req.data.quiz_session) {
         console.log('current messages: ')
         if (req.data.quiz_session.current_msgs) {
-            req.data.quiz_session.current_msgs.array.forEach(element => {
+            req.data.quiz_session.current_msgs.forEach(element => {
                 console.log(element);
             });
         }
