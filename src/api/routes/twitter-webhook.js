@@ -533,7 +533,7 @@ router.post('/twitter-webhook', async (req, res) => {
                         const messages = node.messages;
                         if (messages) {
                             const text = messages.join('\n');
-                            await twitter_api.send_dm(twitter_user_id, text, node.quick_replies);
+                            await twitter_api.send_dm(twitter_user_id, text, node.quick_replies, node.attachment);
                         }
 
                         await stasher.save_stash(twitter_user_id, new_stash);
@@ -811,7 +811,7 @@ router.post('/twitter-webhook', async (req, res) => {
                 const messages = node.messages;
                 if (messages) {
                     const text = messages.join('\n');
-                    await twitter_api.send_dm(twitter_user_id, text, node.quick_replies);
+                    await twitter_api.send_dm(twitter_user_id, text, node.quick_replies, node.attachment);
                 }
 
                 await stasher.save_stash(twitter_user_id, stash);
