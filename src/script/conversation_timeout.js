@@ -6,15 +6,12 @@ const analytics_api = require('../webservices/analytics');
 const { json } = require('body-parser');
 
 async function process_queue() {
-    const alredy_running = await redis.get('timeout_started_at');
+    const ttl = 3600000;
 
-    if (alredy_running) {
-        console.info('Já há uma execução para o script de timeout');
-        return 1;
-    }
-    else {
-        console.info('Criando chave no redis para esta execução');
-        await redis.set('timeout_started_at', (Date.now() / 1000));
+    const lock = await redis.setnx('timeout_started_at', (Date.now() / 1000));
+    console.log(lock);
+    if (lock === 1) {
+        await redis.pexpire('timeout_started_at', ttl);
 
         console.info('Buscando keys no redis');
         const keys = await redis.keys('*');
@@ -58,8 +55,16 @@ async function process_queue() {
 
         console.info('Deletando key timeout_started_at no redis');
         await redis.del('timeout_started_at');
+        process.exit(1);
+
+        return 1;
+    }
+    else {
+        console.info('Já há uma execução para o script de timeout');
+        process.exit(1);
         return 1;
     }
 }
 
 process_queue();
+
