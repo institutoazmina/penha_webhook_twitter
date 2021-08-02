@@ -24,7 +24,7 @@ function get_message_data(text, options, attachment) {
             media: { id: attachment }
         }
     }
-
+    console.log(message_data_obj);
     return message_data_obj;
 }
 
