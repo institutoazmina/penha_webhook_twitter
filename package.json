@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "test": "jest",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "timeout": "node src/script/conversation_timeout.js"
   },
   "author": "Lucas Ansei",
   "license": "ISC",
