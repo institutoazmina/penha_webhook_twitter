@@ -14,7 +14,7 @@ function get_message_data(text, options, attachment) {
     if (options) {
         message_data_obj.quick_reply = {
             type: 'options',
-            option: options
+            options: options
         }
     }
 
