@@ -20,7 +20,7 @@ function get_message_data(text, options, attachment) {
 
     if (attachment) {
         message_data_obj.attachment = {
-            type: 'attachment',
+            type: 'media',
             media: { id: attachment }
         }
     }
