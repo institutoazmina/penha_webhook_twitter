@@ -8,24 +8,28 @@ const client = new Twitter({
     access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 });
 
-function get_message_data(text, options) {
-    if (options) {
-        return {
-            text: text,
+function get_message_data(text, options, attachment) {
+    const message_data_obj = { text: text }
 
-            quick_reply: {
-                type: 'options',
-                options: options
-            }
-        };
+    if (options) {
+        message_data_obj.quick_reply = {
+            type: 'options',
+            option: options
+        }
     }
-    else {
-        return { text: text }
+
+    if (attachment) {
+        message_data_obj.attachment = {
+            type: 'attachment',
+            media: { id: attachment }
+        }
     }
+
+    return message_data_obj;
 }
 
-async function send_dm(twitter_user_id, text, options) {
-    const message_data = get_message_data(text, options);
+async function send_dm(twitter_user_id, text, options, attachment) {
+    const message_data = get_message_data(text, options, attachment);
 
     try {
         const direct_message = await client.post("direct_messages/events/new", {

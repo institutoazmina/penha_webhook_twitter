@@ -416,9 +416,10 @@ router.post('/twitter-webhook', async (req, res) => {
 
                             // Verificando por mensagens
                             const messages = node.messages;
+                            const attachment = node.attachment;
                             if (messages) {
                                 const text = messages.join('\n');
-                                await twitter_api.send_dm(twitter_user_id, text, node.quick_replies);
+                                await twitter_api.send_dm(twitter_user_id, text, node.quick_replies, attachment);
                             }
 
                             await stasher.save_stash(twitter_user_id, new_stash);
