@@ -35,7 +35,7 @@ async function process_queue() {
     
                     const twitter_user_id = key;
     
-                    await twitter.send_dm(twitter_user_id, config_timeout_msg);
+                    // await twitter.send_dm(twitter_user_id, config_timeout_msg);
                     await analytics_api.timeout(stash.last_analytics_id);
     
                     const new_stash = {
