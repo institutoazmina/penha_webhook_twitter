@@ -76,6 +76,7 @@ router.post('/twitter-webhook', async (req, res) => {
 
             if (stash && !stash.last_conversa_finished_at) {
                 stash.last_msg_epoch = Date.now();
+                await stasher.save_stash(twitter_user_id, stash);
 
                 let node = flow.nodes.filter((n) => {
                     return n.code === stash.current_node;
