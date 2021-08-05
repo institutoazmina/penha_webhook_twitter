@@ -24,20 +24,24 @@ async function process_queue() {
                 if (key === 'json_config') {
                     return;
                 }
+
+                console.log('key: ' + key);
     
                 let stash = await redis.get(key);
                 stash = JSON.parse(stash);
     
                 const last_msg_epoch = stash.last_msg_epoch;
                 const seconds_since_last_msg = (Date.now() / 1000) - last_msg_epoch;
-    
+                console.log("last_msg_epoch: " + stash.last_msg_epoch);
+                console.log("config_timeout_seconds: " + json_config.timeout_seconds);
+
                 if (seconds_since_last_msg >= config_timeout_seconds) {
     
                     const twitter_user_id = key;
     
                     // await twitter.send_dm(twitter_user_id, config_timeout_msg);
-                    await analytics_api.timeout(stash.last_analytics_id);
-    
+                    const analytics_req = await analytics_api.timeout(stash.last_analytics_id);
+                    console.log(analytics_req);
                     const new_stash = {
                         last_conversa_finished_at: (Date.now() / 1000)
                     };
