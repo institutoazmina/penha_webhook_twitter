@@ -36,8 +36,6 @@ async function process_queue() {
 
                     const now = (Date.now() / 1000);
 
-
-                    const seconds_since_last_msg = (Date.now() / 1000) - (last_msg_epoch / 1000);
                     console.log("last_msg_plus_timeout: " + last_msg_plus_timeout);
                     console.log("now: " + now);
     
