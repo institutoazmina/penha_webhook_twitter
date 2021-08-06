@@ -38,9 +38,8 @@ async function process_queue() {
 
 
                     const seconds_since_last_msg = (Date.now() / 1000) - (last_msg_epoch / 1000);
-                    console.log("last_msg_epoch: " + stash.last_msg_epoch);
-                    console.log("config_timeout_seconds: " + json_config.timeout_seconds);
-                    console.log("seconds_since_last_msg: " + seconds_since_last_msg);
+                    console.log("last_msg_plus_timeout: " + last_msg_plus_timeout);
+                    console.log("now: " + now);
     
                     if (last_msg_plus_timeout <= now) {
         
