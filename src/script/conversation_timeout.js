@@ -21,41 +21,39 @@ async function process_queue() {
             const config_timeout_msg = json_config.timeout_message;
     
             for (const key of keys) {
-                if (key === 'json_config') {
-                    return;
-                }
-
-                console.log('key: ' + key);
-    
-                let stash = await redis.get(key);
-                stash = JSON.parse(stash);
-    
-                if (stash.last_msg_epoch) {
-                    const last_msg_epoch = stash.last_msg_epoch;
-                    const last_msg_plus_timeout = (last_msg_epoch / 1000) + config_timeout_seconds;
-    
-                    const now = (Date.now() / 1000);
-    
-                    console.log("last_msg_plus_timeout: " + last_msg_plus_timeout);
-                    console.log("now: " + now);
-    
-                    if (last_msg_plus_timeout <= now) {
-                        console.log('hora de dar timeout')
-                        const twitter_user_id = key;
+                if (key != 'json_config' && key != 'timeout_started_at') {       
+                    console.log('key: ' + key);
         
-                        // await twitter.send_dm(twitter_user_id, config_timeout_msg);
-                        console.log('Disparando post para api de analytics');
-                        const analytics_req = await analytics_api.timeout(stash.last_analytics_id, last_msg_plus_timeout);
-                        console.log('retornou da req');
-                        console.log(analytics_req);
-                        const new_stash = {
-                            last_conversa_finished_at: last_msg_plus_timeout
-                        };
-                        return await redis.set(twitter_user_id, JSON.stringify(new_stash));
+                    let stash = await redis.get(key);
+                    stash = JSON.parse(stash);
+        
+                    if (stash.last_msg_epoch) {
+                        const last_msg_epoch = stash.last_msg_epoch;
+                        const last_msg_plus_timeout = (last_msg_epoch / 1000) + config_timeout_seconds;
+        
+                        const now = (Date.now() / 1000);
+        
+                        console.log("last_msg_plus_timeout: " + last_msg_plus_timeout);
+                        console.log("now: " + now);
+        
+                        if (last_msg_plus_timeout <= now) {
+                            console.log('hora de dar timeout')
+                            const twitter_user_id = key;
+            
+                            // await twitter.send_dm(twitter_user_id, config_timeout_msg);
+                            console.log('Disparando post para api de analytics');
+                            const analytics_req = await analytics_api.timeout(stash.last_analytics_id, last_msg_plus_timeout);
+                            console.log('retornou da req');
+                            console.log(analytics_req);
+                            const new_stash = {
+                                last_conversa_finished_at: last_msg_plus_timeout
+                            };
+                            return await redis.set(twitter_user_id, JSON.stringify(new_stash));
+                        }
                     }
-                }
-                else {
-                    return 1;
+                    else {
+                        return 1;
+                    }
                 }
             }
     
