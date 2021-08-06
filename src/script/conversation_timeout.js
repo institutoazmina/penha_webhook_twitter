@@ -46,7 +46,9 @@ async function process_queue() {
                         const twitter_user_id = key;
         
                         // await twitter.send_dm(twitter_user_id, config_timeout_msg);
+                        console.log('Disparando post para api de analytics');
                         const analytics_req = await analytics_api.timeout(stash.last_analytics_id, last_msg_plus_timeout);
+                        console.log('retornou da req');
                         console.log(analytics_req);
                         const new_stash = {
                             last_conversa_finished_at: last_msg_plus_timeout
