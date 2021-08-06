@@ -58,8 +58,9 @@ async function timeout(conversa_id, timeout_epoch) {
     console.log('Chegou na func de timeout no WS');
     let tries = 0;
     while (tries < 3) {
-        console.log('ta no while de tentativas');
         try {
+            console.log('conversa_id: ' + conversa_id);
+            console.log('timeout_epoch: ' + timeout_epoch);
             const res = await ua.post(req_url, {
                 conversa_id: conversa_id,
                 timeout_epoch: timeout_epoch
@@ -67,7 +68,8 @@ async function timeout(conversa_id, timeout_epoch) {
             console.log(res);
             return res;
         }
-        catch {
+        catch (err) {
+            console.log(err)
             console.error('Erro ao mandar post para API de Analytics');
             tries++;
         }
