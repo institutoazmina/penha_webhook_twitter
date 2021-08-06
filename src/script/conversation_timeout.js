@@ -27,7 +27,7 @@ async function process_queue() {
                     let stash = await redis.get(key);
                     stash = JSON.parse(stash);
 
-                    if (stash.last_msg_epoch) {
+                    if (stash.last_msg_epoch && stash.last_analytics_id) {
                         const last_msg_epoch = stash.last_msg_epoch;
                         const last_msg_plus_timeout = (last_msg_epoch / 1000) + config_timeout_seconds;
         
