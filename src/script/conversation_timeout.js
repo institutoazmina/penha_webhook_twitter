@@ -42,7 +42,7 @@ async function process_queue() {
                     console.log("now: " + now);
     
                     if (last_msg_plus_timeout <= now) {
-        
+                        console.log('hora de dar timeout')
                         const twitter_user_id = key;
         
                         // await twitter.send_dm(twitter_user_id, config_timeout_msg);
