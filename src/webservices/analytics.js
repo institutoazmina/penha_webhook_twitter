@@ -59,13 +59,11 @@ async function timeout(analytics_id, timeout_epoch) {
     let tries = 0;
     while (tries < 3) {
         try {
-            console.log('analytics_id: ' + analytics_id);
-            console.log('timeout_epoch: ' + timeout_epoch);
             const res = await ua.post(req_url, {
                 analytics_id: analytics_id,
                 timeout_epoch: timeout_epoch
             });
-            console.log(res);
+
             return res;
         }
         catch (err) {
