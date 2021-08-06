@@ -20,7 +20,7 @@ async function process_queue() {
             const config_timeout_seconds = json_config.timeout_seconds;
             const config_timeout_msg = json_config.timeout_message;
     
-            keys.forEach(async key => {
+            for (const key of keys) {
                 if (key === 'json_config') {
                     return;
                 }
@@ -33,9 +33,9 @@ async function process_queue() {
                 if (stash.last_msg_epoch) {
                     const last_msg_epoch = stash.last_msg_epoch;
                     const last_msg_plus_timeout = (last_msg_epoch / 1000) + config_timeout_seconds;
-
+    
                     const now = (Date.now() / 1000);
-
+    
                     console.log("last_msg_plus_timeout: " + last_msg_plus_timeout);
                     console.log("now: " + now);
     
@@ -57,7 +57,7 @@ async function process_queue() {
                 else {
                     return 1;
                 }
-            });
+            }
     
             await redis.del('timeout_started_at');
             process.exit(1);
