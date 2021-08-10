@@ -40,7 +40,7 @@ async function process_queue() {
                             console.log('hora de dar timeout')
                             const twitter_user_id = key;
             
-                            // await twitter.send_dm(twitter_user_id, config_timeout_msg);
+                            await twitter.send_dm(twitter_user_id, config_timeout_msg);
                             const analytics_req = await analytics_api.timeout(stash.last_analytics_id, last_msg_plus_timeout);
 
                             const new_stash = {
@@ -48,6 +48,7 @@ async function process_queue() {
                             };
                             
                             await redis.set(twitter_user_id, JSON.stringify(new_stash));
+                            //await redis.del(twitter_user_id);
                         }
                     }
                 }
